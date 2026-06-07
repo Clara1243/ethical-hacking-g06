@@ -1,48 +1,35 @@
-export type UserRole = 'student' | 'educator' | 'admin';
+export type Role = 'student' | 'educator' | 'admin';
+export type Status = 'active' | 'suspended';
 
 export interface UserProfile {
-  name: string;
-  email: string;
-  role: UserRole;
-  bio: string;
-  avatar: string;
-  enrolledCourses: string[]; // Course IDs
-  status?: 'Active' | 'Inactive';
-}
-
-export interface Review {
-  id: string;
-  author: string;
-  authorRole: UserRole;
-  content: string;
-  rating: number;
-  date: string;
+  id: number;
+  username: string;
+  role: Role;
+  bio: string | null;
+  status: Status;
 }
 
 export interface Course {
-  id: string;
+  id: number;
+  instructor_id: number;
   title: string;
   description: string;
-  longDescription?: string;
-  category: string; // e.g. computer science, accountant, network security, psychology
-  rating: number;
-  duration: string;
-  instructor: string;
-  enrolledCount: number;
-  modulesCount: number;
-  image: string;
-  reviews: Review[];
+  price: number;
 }
 
-export interface PaymentReceipt {
+export interface Receipt {
   id: number;
-  date: string;
+  user_id: number;
+  course_id: number;
   amount: number;
-  courseId: string;
-  courseTitle: string;
-  buyerName: string;
-  buyerEmail: string;
-  status: 'Paid' | 'Pending' | 'Refunded';
-  instructor?: string;
-  paymentMethod?: string;
+  payment_method: string;
+  transaction_date: string;
+}
+
+export interface CourseMaterial {
+  id: number;
+  course_id: number;
+  uploader_id: number;
+  filename: string;
+  file_path: string;
 }

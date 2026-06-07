@@ -129,5 +129,4 @@ When running **EduUnity Connect** locally, you can preview three distinct penetr
 
 ---
 
-### 🎉 Happy Coding, and Enjoy Hacking Safely!
 *(This tool is purely intended for educational, penetration testing, and ethical programming awareness. Secure your code, parameterize queries, and always validate user bounds!)*
