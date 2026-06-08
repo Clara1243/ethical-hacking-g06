@@ -40,7 +40,7 @@ services:
       - DB_HOST=db
       - DB_USER=root
       - DB_PASSWORD=rootpassword
-      - DB_NAME=MyEduUnity_db
+      - DB_NAME=MyEduConnect_db
 
   db:
     image: mysql:8.0
