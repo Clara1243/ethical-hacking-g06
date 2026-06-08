@@ -1,1 +1,11 @@
-// Backend dependencies (express, mysql2, cors)
+
+{
+  "name": "myeduconnect-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "mysql2": "^3.11.0"
+  }
+}

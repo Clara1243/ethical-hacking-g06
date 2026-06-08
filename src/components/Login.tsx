@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
 
-
 interface LoginProps {
   onLoginSuccess: (user: UserProfile) => void;
 }
@@ -10,7 +9,8 @@ export function Login({ onLoginSuccess }: LoginProps) {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [email, setEmail] = useState(''); // Only used for registration
+  const [email, setEmail] = useState(''); 
+  const [role, setRole] = useState('student'); // Added Role State
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -22,10 +22,9 @@ export function Login({ onLoginSuccess }: LoginProps) {
     const endpoint = isLoginMode ? '/api/login' : '/api/register';
     const payload = isLoginMode 
       ? { username, password } 
-      : { username, email, password, role: 'student' }; // Default new users to student
+      : { username, email, password, role }; 
 
     try {
-      // Send data to Member 2's Node.js backend API
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -33,20 +32,40 @@ export function Login({ onLoginSuccess }: LoginProps) {
       });
 
       if (!response.ok) {
-        throw new Error(isLoginMode ? 'Invalid username or password.' : 'Registration failed. Username may be taken.');
+        throw new Error(isLoginMode ? 'Invalid username or password.' : 'Registration failed. Email may already be registered.');
       }
 
-      const userData = await response.json();
-      onLoginSuccess(userData);
+      const dbUser = await response.json();
+      
+      // CRITICAL FIX: Map the database row to the React interface to prevent crashes
+      const normalizedUser: UserProfile = {
+        ...dbUser,
+        name: dbUser.email, // Map DB email to UI name
+        avatar: `https://ui-avatars.com/api/?name=${dbUser.email}&background=random`, // Generate an avatar
+        enrolledCourses: dbUser.enrolledCourses || [] // Prevent array crash
+      };
+
+      onLoginSuccess(normalizedUser);
       
     } catch (err: any) {
-      // Fallback for current testing while backend is offline
-      setError(err.message || 'Unable to connect to the backend server. Is Member 2\'s API running?');
+      setError(err.message || 'Unable to connect to the backend server.');
     } finally {
       setIsLoading(false);
     }
   };
 
+/*
+    // --- TEMPORARY FRONTEND VERIFICATION BYPASS ---
+    // Remove this entire block once Member 2's API is online!
+    if (password === 'test') {
+      setIsLoading(false);
+      if (username.includes('admin')) return onLoginSuccess(USERS.admin);
+      if (username.includes('helen')) return onLoginSuccess(USERS.educator);
+      return onLoginSuccess(USERS.student);
+    }
+    // ----------------------------------------------
+*/
+  
   return (
     <div className="min-h-[75vh] flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-gray-100">
@@ -58,7 +77,7 @@ export function Login({ onLoginSuccess }: LoginProps) {
             {isLoginMode ? 'Welcome Back' : 'Create an Account'}
           </h2>
           <p className="text-sm text-gray-500 mt-2">
-            {isLoginMode ? 'Sign in to access your dashboard.' : 'Join the EduUnity community.'}
+            {isLoginMode ? 'Sign in to access your dashboard.' : 'Join the MyEduConnect community.'}
           </p>
         </div>
 
@@ -70,29 +89,42 @@ export function Login({ onLoginSuccess }: LoginProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Username or Email</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Username {isLoginMode && "or Email"}</label>
             <input 
               type="text" 
               required
               className="w-full bg-slate-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. alice.smith@eduunity.io"
+              placeholder="e.g. alice smith"
             />
           </div>
 
           {!isLoginMode && (
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Email Address</label>
-              <input 
-                type="email" 
-                required
-                className="w-full bg-slate-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="alice@example.com"
-              />
-            </div>
+            <>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Email Address</label>
+                <input 
+                  type="email" 
+                  required
+                  className="w-full bg-slate-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="alice@example.com"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Account Type</label>
+                <select 
+                  className="w-full bg-slate-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                >
+                  <option value="student">Student</option>
+                  <option value="educator">Educator</option>
+                </select>
+              </div>
+            </>
           )}
 
           <div>
