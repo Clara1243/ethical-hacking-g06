@@ -1,0 +1,62 @@
+# DELIBERATE VULNERABILITY: cleartext protocol
+# (HTTP between frontend and backend; MySQL over unencrypted TCP)
+# This lab intentionally exposes services without TLS so students
+# can identify and analyse man-in-the-middle and sniffing attacks.
+# Do NOT use this configuration outside the approved lab environment.
+
+# Lab-only: no TLS between services; traffic is plaintext.
+
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: Dockerfile.frontend
+    container_name: EduUnity_frontend
+    ports:
+      - "5173:5173"
+    networks:
+      - platform-net
+    depends_on:
+      - backend
+    # DELIBERATE VULNERABILITY: communicates with backend over plain HTTP
+    environment:
+      - VITE_API_BASE=http://backend:3000
+
+  backend:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    container_name: EduUnity_backend
+    ports:
+      - "3000:3000"
+    networks:
+      - platform-net
+    depends_on:
+      - db
+    environment:
+      # DELIBERATE VULNERABILITY: MySQL connection uses plain TCP (no TLS)
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=MyEduUnity_db
+
+  db:
+    image: mysql:8.0
+    container_name: MyEduConnect_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: MyEduUnity_db
+    ports:
+      - "3306:3306"
+    volumes:
+      # DELIBERATE VULNERABILITY: database traffic is unencrypted over TCP
+      - ../database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - platform-net
+
+networks:
+  platform-net:
+    name: platform-net
+    driver: bridge

@@ -167,3 +167,53 @@ ethical-hacking-g06/
 ---
 
 *(This tool is purely intended for educational, penetration testing, and ethical programming awareness. Secure your code, parameterize queries, and always validate user bounds!)*
+
+---
+
+## 🐳 Docker Deployment (Instructor Redeployment)
+
+This section describes the containerised deployment used to fully redeploy the platform for lab assessment. All platform components run as Docker services on a single shared bridge network.
+
+### Architecture
+
+| Service | Container name | Host port | Internal DNS | Role |
+|---------|---------------|-----------|--------------|------|
+| Frontend (React/Vite) | EduUnity_frontend | 5173 | `frontend` | Web UI |
+| Backend (Node/Express) | EduUnity_backend | 3000 | `backend` | API server |
+| Database (MySQL) | MyEduConnect_db | 3306 | `db` | Data store |
+
+Services communicate over the custom bridge network `platform-net`. Service discovery is handled by Docker DNS using the service names above.
+
+### Prerequisites
+
+- Docker Desktop (Engine running)
+- Docker Compose V2 (`docker compose version`)
+
+### Deploy
+
+```bash
+docker compose -f deploy/docker-compose.yml up -d --build
+```
+
+Verify services:
+
+```bash
+docker compose -f deploy/docker-compose.yml ps
+docker compose -f deploy/docker-compose.yml exec backend getent hosts db
+```
+
+Expected: `backend` resolves `db` to the database container IP on `platform-net`.
+
+Access points:
+
+- Frontend UI: `http://localhost:5173`
+- Backend API: `http://localhost:3000`
+- Database: `localhost:3306` (MySQL root / `rootpassword`)
+
+### Known Lab Vulnerabilities
+
+The following network-layer weaknesses are intentionally present for controlled lab exercises only. Do not use this configuration outside the approved environment.
+
+- Cleartext HTTP: Frontend talks to backend over plain HTTP (`http://backend:3000`). No TLS is configured.
+- Unencrypted database connection: Backend connects to MySQL over plain TCP. No TLS is configured between `backend` and `db`.
+
