@@ -15,7 +15,7 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: EduUnity_frontend
     ports:
-      - "5173:5173"
+      - "5173:3000"
     networks:
       - platform-net
     depends_on:
@@ -47,7 +47,7 @@ services:
     container_name: MyEduConnect_db
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: MyEduUnity_db
+      MYSQL_DATABASE: MyEduConnect_db
     ports:
       - "3306:3306"
     volumes:
