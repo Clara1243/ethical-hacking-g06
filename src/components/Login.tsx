@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
 
+
 interface LoginProps {
   onLoginSuccess: (user: UserProfile) => void;
 }

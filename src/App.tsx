@@ -310,29 +310,39 @@ export default function App() {
 
             {/* Navigation Bar: ONLY SHOW IF LOGGED IN */}
             {currentUser && (
-              <nav id="horizontal-menu-nav" className="hidden md:flex items-center gap-1">
-                {isAdmin ? (
-                  <>
-                    <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('admin'); setAdminSubTab('dashboard'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'admin' && adminSubTab === 'dashboard' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Dashboard</button>
-                    <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('admin'); setAdminSubTab('ledger'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'admin' && adminSubTab === 'ledger' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Global Billing Ledger</button>
-                    <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('admin'); setAdminSubTab('users'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'admin' && adminSubTab === 'users' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>User Management</button>
-                    <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('profile'); setAdminSubTab('profile'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'profile' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Profile</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => { setSelectedCourseId(null); updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('courses'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'courses' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Course Catalog</button>
-                    {currentUser && !isEducator && (
-                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('billing'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'billing' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Payment Ledger</button>
-                    )}
-                    {currentUser && (
-                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('profile'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'profile' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Profile Bio</button>
-                    )}
-                    {currentUser && isEducator && (
+                {/* Navigation Bar: DYNAMIC SESSION CONTROL */}
+              {currentUser && (
+                <nav id="horizontal-menu-nav" className="hidden md:flex items-center gap-1">
+                  
+                  {/* --- 1. ADMIN SESSION --- */}
+                  {currentUser.role === 'admin' && (
+                    <>
+                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('admin'); setAdminSubTab('dashboard'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'admin' && adminSubTab === 'dashboard' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Dashboard</button>
+                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('admin'); setAdminSubTab('ledger'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'admin' && adminSubTab === 'ledger' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Global Billing Ledger</button>
+                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('admin'); setAdminSubTab('users'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'admin' && adminSubTab === 'users' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>User Management</button>
+                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('profile'); setAdminSubTab('profile'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'profile' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Profile</button>
+                    </>
+                  )}
+
+                  {/* --- 2. EDUCATOR SESSION --- */}
+                  {currentUser.role === 'educator' && (
+                    <>
+                      <button onClick={() => { setSelectedCourseId(null); updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('courses'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'courses' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Course Catalog</button>
                       <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('educator'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'educator' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Educator Portal</button>
-                    )}
-                  </>
-                )}
-              </nav>
+                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('profile'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'profile' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Profile Bio</button>
+                    </>
+                  )}
+
+                  {/* --- 3. STUDENT SESSION --- */}
+                  {currentUser.role === 'student' && (
+                    <>
+                      <button onClick={() => { setSelectedCourseId(null); updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('courses'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'courses' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Course Catalog</button>
+                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('billing'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'billing' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Payment Ledger</button>
+                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('profile'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'profile' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Profile Bio</button>
+                    </>
+                  )}
+                </nav>
+              )}
             )}
 
             {/* Top Right Profile Dropdown */}
@@ -365,7 +375,6 @@ export default function App() {
               if (user.role === 'admin') { setActiveTab('admin'); } else { setActiveTab('courses'); }
             }} />
           ) : activeReceiptId !== null ? (
-            // THIS FIXES THE RECEIPT ROUTING! It forces the receipt to show when an ID is active.
             <ReceiptView
               receiptId={activeReceiptId}
               receipts={receipts}
@@ -374,14 +383,14 @@ export default function App() {
             />
           ) : (
             <div>
-              {/* Standard Guest & Client Tab switches */}
-              {activeTab === 'courses' && (
+              {/* --- UNIVERSAL CONTENT (Accessible by multiple sessions) --- */}
+              {activeTab === 'courses' && (currentUser.role === 'student' || currentUser.role === 'educator') && (
                 <div>
                   {selectedCourseId ? (
                     (() => {
                       const course = courses.find(c => c.id === selectedCourseId);
                       if (!course) return <p className="text-center py-8">Course not found.</p>;
-                      const isEnrolled = currentUser ? currentUser.enrolledCourses.includes(course.id) : false;
+                      const isEnrolled = currentUser.enrolledCourses.includes(course.id);
                       return (
                         <CourseDetailPage course={course} isEnrolled={isEnrolled} userRole={currentUser.role} buyerEmail={currentUser.email} buyerName={currentUser.name} receipts={receipts} onBack={() => setSelectedCourseId(null)} onCompleteEnrollment={handleCompleteEnrollment} onAddReview={(content, rating) => handleAddReview(course.id, content, rating)} />
                       );
@@ -391,16 +400,24 @@ export default function App() {
                   )}
                 </div>
               )}
-              {activeTab === 'billing' && !isEducator && (
+
+              {/* Universal Profile Viewer */}
+              {activeTab === 'profile' && resolvedProfileUser && (
+                <ProfilePage user={resolvedProfileUser} onUpdateBio={handleUpdateBio} enrolledCoursesCount={resolvedProfileUser.enrolledCourses ? resolvedProfileUser.enrolledCourses.length : 0} isIdorTarget={isIdorTarget} loggedInUserRole={currentUser.role} />
+              )}
+
+              {/* --- STRICT STUDENT CONTENT --- */}
+              {activeTab === 'billing' && currentUser.role === 'student' && (
                 <BillingHistory receipts={receipts} userEmail={currentUser.email} onViewReceipt={(id) => updateAddressBarState(id)} />
               )}
-              {activeTab === 'profile' && resolvedProfileUser && (
-                <ProfilePage user={resolvedProfileUser} onUpdateBio={handleUpdateBio} enrolledCoursesCount={resolvedProfileUser.enrolledCourses ? resolvedProfileUser.enrolledCourses.length : 0} isIdorTarget={isIdorTarget} loggedInUserRole={currentUser?.role} />
-              )}
-              {activeTab === 'educator' && isEducator && (
+
+              {/* --- STRICT EDUCATOR CONTENT --- */}
+              {activeTab === 'educator' && currentUser.role === 'educator' && (
                 <EducatorDashboard courses={courses.filter((c) => c.instructor === currentUser.name || c.instructor === 'Dr. Helen Vance')} onCreateCourse={handleCreateCourse} />
               )}
-              {activeTab === 'admin' && isAdmin && (
+              
+              {/* --- STRICT ADMIN CONTENT --- */}
+              {activeTab === 'admin' && currentUser.role === 'admin' && (
                 <div>
                   {adminSubTab === 'dashboard' && <AdminPanel receipts={receipts} users={usersDb} coursesCount={courses.length} onViewReceipt={(id) => updateAddressBarState(id)} mode="dashboard" />}
                   {adminSubTab === 'ledger' && <AdminPanel receipts={receipts} users={usersDb} coursesCount={courses.length} onViewReceipt={(id) => updateAddressBarState(id)} mode="ledger" />}
