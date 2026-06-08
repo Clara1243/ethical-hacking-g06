@@ -107,14 +107,26 @@ The backend handles the vulnerable routing (e.g., SQL Injection endpoints) and c
    ```bash
    npm run dev
    ```
-5. The terminal will provide a local network link (usually http://localhost:5173). Ctrl+Click the link to open the platform in your browser.
+5. The terminal will provide a local network link (local host used for API, so use other network links. E.g., [http://](http://100.105.41.72:3000/)). Ctrl+Click the link to open the platform in your browser.
 
 ### Phase 6: System Verification Test
 1. Open the platform in your browser (http://localhost:5173).
-2. On the login screen, enter the mock credentials:
-   - Username/Email: alice.smith@eduunity.io
-   - Password: alice123
-3. Click Sign In.
+2. On the login screen, enter the mock credentials (more credential details can be found in database/init.sql):
+   ```plaintext
+     Admin
+     - username: admin
+     - email: admin@eduunity.io
+     - password: admin123
+     Educator
+     - username: helen vance
+     - email: helen.vance@eduunity.io
+     - password: helen123
+     Student 1
+     - username: alice smith
+     - email: alice.smith@eduunity.io
+     - password: alice123
+   ```
+4. Click Sign In.
 (Note: If you successfully route to the Course Catalog, your Vite frontend has successfully talked to your Node.js backend, which successfully queried your Docker database. The environment is now fully staged for vulnerability testing.).
 
 ## 2. Recommended VS Code Extensions
@@ -150,7 +162,7 @@ ethical-hacking-g06/
 ├── vite.config.ts           # Vite config (Contains the /api proxy)
 │
 ├── database/                # THE DATABASE
-│   └── init.sql             # MySQL schema and vulnerable mock data
+│   └── init.sql             # MySQL schema and mock data
 │
 ├── src/                     # THE FRONTEND
 │   ├── App.tsx              # Application state and routing
