@@ -81,21 +81,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           </div>
         </div>
-
-        {/* Security Lab Notice */}
-        <div className="bg-indigo-900 text-white p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-800 shadow-md">
-          <div className="space-y-1">
-            <span className="text-[9px] font-mono font-bold text-indigo-300 uppercase tracking-widest">Platform Security Administration</span>
-            <h3 className="text-sm font-bold">EduUnity Cyber Range & Pen-Testing Playground</h3>
-            <p className="text-xs text-indigo-200 max-w-xl">
-              This special EduUnity Connect build was deliberately crafted with severe real-world security vulnerabilities to demonstrate core software engineering pitfalls. Access pages via the custom navigation bar to execute IDOR, XSS and file upload bypass tests.
-            </p>
-          </div>
-          <div className="px-4 py-2 bg-indigo-950 border border-indigo-700/55 rounded-xl font-mono text-center shrink-0">
-            <span className="text-[9px] text-indigo-300 block">LAB STATE</span>
-            <span className="text-xs font-bold text-emerald-400">● LIVE RUNNING</span>
-          </div>
-        </div>
       </div>
     );
   }
@@ -107,9 +92,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <div>
           <h2 className="text-xl font-extrabold text-slate-900">Global Billing Ledger & Invoices</h2>
           <p className="text-xs text-gray-500 font-mono mt-1">List of all system transactions, buyer associations, and invoice credentials.</p>
-        </div>
-        <div className="mt-2 md:mt-0 text-[10px] font-mono text-amber-600 bg-amber-50 px-2.5 py-1 border border-amber-200 rounded-full font-bold">
-          IDOR Vulnerable: Direct Receipt Query Parameter active
         </div>
       </div>
 

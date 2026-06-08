@@ -85,34 +85,31 @@ You can execution the following npm commands inside the root directory directory
 Here is a quick directory tour to help you navigate files comfortably within VS Code:
 
 ```text
-├── .env.example            # Sample configuration template for project secrets
-├── index.html              # Core single-page HTML rendering mount
-├── package.json            # Project dependencies, dev frameworks, and terminal scripts
-├── tsconfig.json           # Global compiler definitions for strict type assertions
-├── vite.config.ts          # Vite build environment configuration and Tailwind v4 plugins
+ethical-hacking-g06/
+├── docker-compose.yml       # Docker config for the MySQL database
+├── package.json             # Frontend dependencies (React, Vite, Tailwind)
+├── vite.config.ts           # Vite config (Contains the /api proxy)
 │
-└── src/
-    ├── main.tsx            # React application entry-point bootstrapper
-    ├── types.ts            # Centralized TypeScript definitions (Course, UserProfile, Receipts)
-    ├── data.ts             # Initial datasets (pre-configured students, educators, and courses)
-    ├── App.tsx             # Main coordinate state, global tab navigation, and action handlers
-    │
-    └── components/         # Modular user interface layout cards
-        ├── WebAddressBar.tsx      # Interactive browser Address indicator for IDOR penetration tests
-        ├── CourseCatalog.tsx      # Comprehensive list of computer science modules
-        ├── CourseDetailPage.tsx  # Curriculum layouts, registrant rosters, and vulnerable File Upload labs
-        ├── EducatorDashboard.tsx  # Dynamic course publishing form for instructors
-        ├── ProfilePage.tsx        # Personal dossier displaying biographical text (Vulnerable to IDOR parameters)
-        ├── BillingHistory.tsx     # Student payment archives showcasing billing ledger transactions
-        ├── ReceiptView.tsx        # Customizable payment invoice receipt generator
-        └── UserManagement.tsx     # Security administration table for editing active statuses/privileges
+├── database/                # THE DATABASE
+│   └── init.sql             # MySQL schema and vulnerable mock data
+│
+├── src/                     # THE FRONTEND
+│   ├── App.tsx              # Application state and routing
+│   ├── types.ts             # TypeScript interfaces
+│   └── components/          # UI Components
+│       ├── Login.tsx        # Sends fetch() to /api/login
+│       └── ...
+│
+└── server/                  # THE BACKEND
+    ├── package.json         # Backend dependencies (express, mysql2, cors)
+    └── server.js            # The actual API routes (/api/login, /api/register)
 ```
 
 ---
 
 ## 🎯 Navigating the Vulnerability Labs
 
-When running **EduUnity Connect** locally, you can preview three distinct penetration testing scenarios:
+When running **MyEduConnect** locally, you can preview three distinct penetration testing scenarios:
 
 1. **Indirect Object Reference (IDOR) - Profile & Billing Leads:**
    * Open the **Address Bar** simulation component at the top of the viewport.

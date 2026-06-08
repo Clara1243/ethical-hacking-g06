@@ -168,6 +168,10 @@ export const CourseCatalog: React.FC<CourseCatalogProps> = ({
                         <div className="flex-1 py-1.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-lg border border-emerald-200 text-center uppercase tracking-wide flex items-center justify-center gap-1 cursor-default">
                           ✓ Enrolled
                         </div>
+                      ) : userRole === 'educator' ? (
+                        <div className="flex-1 py-2 bg-slate-50 text-slate-500 text-xs rounded-lg border border-slate-200 text-center uppercase tracking-wide flex items-center justify-center">
+                          Instructor view
+                        </div>
                       ) : (
                         <button
                           onClick={() => onEnroll(course.id)}
