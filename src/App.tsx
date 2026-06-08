@@ -303,50 +303,47 @@ export default function App() {
                 🤝
               </div>
               <div>
-                <h1 className="text-md font-black text-slate-950 tracking-tight leading-none">EduUnity Connect</h1>
+                <h1 className="text-md font-black text-slate-950 tracking-tight leading-none">MyEduConnect</h1>
                 <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest leading-none block mt-0.5">unified learning</span>
               </div>
             </div>
 
-            {/* Navigation Bar: ONLY SHOW IF LOGGED IN */}
-            {currentUser && (
-                {/* Navigation Bar: DYNAMIC SESSION CONTROL */}
-              {currentUser && (
-                <nav id="horizontal-menu-nav" className="hidden md:flex items-center gap-1">
-                  
-                  {/* --- 1. ADMIN SESSION --- */}
-                  {currentUser.role === 'admin' && (
-                    <>
-                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('admin'); setAdminSubTab('dashboard'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'admin' && adminSubTab === 'dashboard' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Dashboard</button>
-                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('admin'); setAdminSubTab('ledger'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'admin' && adminSubTab === 'ledger' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Global Billing Ledger</button>
-                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('admin'); setAdminSubTab('users'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'admin' && adminSubTab === 'users' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>User Management</button>
-                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('profile'); setAdminSubTab('profile'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'profile' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Profile</button>
-                    </>
-                  )}
-
-                  {/* --- 2. EDUCATOR SESSION --- */}
-                  {currentUser.role === 'educator' && (
-                    <>
-                      <button onClick={() => { setSelectedCourseId(null); updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('courses'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'courses' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Course Catalog</button>
-                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('educator'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'educator' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Educator Portal</button>
-                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('profile'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'profile' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Profile Bio</button>
-                    </>
-                  )}
-
-                  {/* --- 3. STUDENT SESSION --- */}
-                  {currentUser.role === 'student' && (
-                    <>
-                      <button onClick={() => { setSelectedCourseId(null); updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('courses'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'courses' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Course Catalog</button>
-                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('billing'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'billing' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Payment Ledger</button>
-                      <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('profile'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'profile' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Profile Bio</button>
-                    </>
-                  )}
-                </nav>
+        {/* Navigation Bar: DYNAMIC SESSION CONTROL */}
+          {currentUser && (
+            <nav id="horizontal-menu-nav" className="hidden md:flex items-center gap-1">
+              
+              {/* --- 1. ADMIN SESSION --- */}
+              {currentUser.role === 'admin' && (
+                <>
+                  <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('admin'); setAdminSubTab('dashboard'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'admin' && adminSubTab === 'dashboard' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Dashboard</button>
+                  <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('admin'); setAdminSubTab('ledger'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'admin' && adminSubTab === 'ledger' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Global Billing Ledger</button>
+                  <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('admin'); setAdminSubTab('users'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'admin' && adminSubTab === 'users' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>User Management</button>
+                  <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('profile'); setAdminSubTab('profile'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'profile' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Profile</button>
+                </>
               )}
-            )}
 
-            {/* Top Right Profile Dropdown */}
-            <div className="relative shrink-0 flex items-center gap-2">
+              {/* --- 2. EDUCATOR SESSION --- */}
+              {currentUser.role === 'educator' && (
+                <>
+                  <button onClick={() => { setSelectedCourseId(null); updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('courses'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'courses' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Course Catalog</button>
+                  <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('educator'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'educator' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700 font-bold' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Educator Portal</button>
+                  <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('profile'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'profile' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Profile Bio</button>
+                </>
+              )}
+
+              {/* --- 3. STUDENT SESSION --- */}
+              {currentUser.role === 'student' && (
+                <>
+                  <button onClick={() => { setSelectedCourseId(null); updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('courses'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'courses' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Course Catalog</button>
+                  <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('billing'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'billing' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Payment Ledger</button>
+                  <button onClick={() => { updateAddressBarState(null); handleProfileEmailChange(null); setActiveTab('profile'); }} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'profile' && activeReceiptId === null ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:text-slate-850 hover:bg-slate-50'}`}>Profile Bio</button>
+                </>
+              )}
+            </nav>
+          )}
+
+          {/* Top Right Profile Dropdown */}
+          <div className="relative shrink-0 flex items-center gap-2">
               {currentUser && (
                 <div className="relative">
                   <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center gap-1.5 p-1.5 hover:bg-slate-50 border border-transparent hover:border-gray-150 rounded-xl transition-all cursor-pointer">
@@ -428,10 +425,22 @@ export default function App() {
           )}
         </main>
 
-        <footer className="bg-slate-900 text-slate-450 text-[11px] border-t border-slate-800 py-6 font-mono">
+        <footer className="bg-slate-900 text-slate-400 text-[11px] border-t border-slate-800 py-6 font-mono">
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-1.5"><span className="text-white text-xs">🎓</span><span>EduUnity Connect © 2026. Emphasizing shared cohesion.</span></div>
-            <div className="flex items-center gap-3"><a href="#" className="hover:text-white transition-colors">Privacy Policy</a><a href="#" className="hover:text-white transition-colors">Terms of Service</a><a href="#" className="hover:text-white transition-colors">Support</a></div>
+            
+            <div className="flex items-center gap-1.5">
+              {/* Fixed: text-s changed to text-sm */}
+              <span className="text-white text-sm">🎓</span>
+              {/* Added text-white here if you want this specific sentence to be stark white */}
+              <span className="text-white">MyEduConnect © 2026. Emphasizing shared cohesion.</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-white transition-colors">Support</a>
+            </div>
+
           </div>
         </footer>
       </div>

@@ -19,11 +19,15 @@ export interface Course {
 
 export interface Receipt {
   id: number;
-  user_id: number;
-  course_id: number;
+  date: string;
   amount: number;
-  payment_method: string;
-  transaction_date: string;
+  courseTitle: string;
+  buyerName: string;
+  buyerEmail: string;
+  status: string;
+  instructor?: string;
+  paymentMethod: string;
+  accountNumber?: string;
 }
 
 export interface CourseMaterial {

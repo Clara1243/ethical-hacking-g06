@@ -1,16 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Printer } from 'lucide-react';
-import { PaymentReceipt } from '../types';
+import { Receipt } from '../types';
 
 interface ReceiptViewProps {
   receiptId: number;
-  receipts: PaymentReceipt[];
+  receipts: Receipt[]; // Kept so App.tsx doesn't throw errors
   currentUserEmail: string;
   onBack: () => void;
 }
 
-export const ReceiptView: React.FC<ReceiptViewProps> = ({ receiptId, receipts, onBack }) => {
-  const receipt = receipts.find(r => r.id === receiptId);
+export const ReceiptView: React.FC<ReceiptViewProps> = ({ receiptId, onBack }) => {
+  // Add state to hold the database data
+  const [receipt, setReceipt] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // CRITICAL FIX: Fetch the data from the Node.js Backend API!
+  useEffect(() => {
+    setIsLoading(true);
+    fetch(`/api/receipts/${receiptId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error || !data.id) setReceipt(null);
+        else setReceipt(data);
+      })
+      .catch(err => {
+        console.error("API Connection Error:", err);
+        setReceipt(null);
+      })
+      .finally(() => setIsLoading(false));
+  }, [receiptId]);
+
+  if (isLoading) {
+    return (
+      <div className="py-20 text-center">
+        <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+        <p className="text-gray-500 font-bold font-mono">Querying Database...</p>
+      </div>
+    );
+  }
 
   return (
     <div id="receipt-detail-view" className="py-8 max-w-2xl mx-auto px-4">
@@ -31,7 +58,7 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ receiptId, receipts, o
             <div className="space-y-1">
               <span className="text-[10px] font-bold tracking-widest uppercase text-indigo-400 font-mono">EduUnity Connect Invoice</span>
               <h3 className="text-xl font-bold font-sans">Receipt Ref #{receipt.id}</h3>
-              <p className="text-[11px] text-slate-450 font-mono">Date: {receipt.date}</p>
+              <p className="text-[11px] text-slate-400 font-mono">Date: {receipt.date}</p>
             </div>
             <button onClick={() => window.print()} className="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors shrink-0" title="Print invoice"><Printer size={16} /></button>
           </div>
@@ -48,14 +75,27 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ receiptId, receipts, o
                 <div className="space-y-0.5"><span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider font-mono">Instructor</span><p className="text-xs font-bold text-indigo-700">{receipt.instructor || 'Dr. Helen Vance'}</p></div>
               </div>
               <hr className="border-gray-150" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-0.5">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider font-mono">Payment Method</span>
+                  <p className="text-xs font-bold text-slate-800">{receipt.paymentMethod || 'Not Specified'}</p>
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider font-mono">Account / Card Number</span>
+                  <p className="text-xs font-bold font-mono text-slate-600 tracking-tight">{receipt.accountNumber || 'N/A'}</p>
+                </div>
+              </div>
+              <hr className="border-gray-150" />
+
               <div className="flex items-center justify-between pt-1">
                 <div className="space-y-0.5">
                   <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider font-mono">Status</span>
-                  <div className="flex items-center gap-1.5 text-emerald-750"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /><span className="text-xs font-bold font-mono uppercase">{receipt.status}</span></div>
+                  <div className="flex items-center gap-1.5 text-emerald-700"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /><span className="text-xs font-bold font-mono uppercase">{receipt.status || 'Paid'}</span></div>
                 </div>
                 <div className="text-right space-y-0.5">
                   <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider font-mono">Total Paid</span>
-                  <p className="text-lg font-black text-slate-900 font-mono">RM{receipt.amount.toFixed(2)}</p>
+                  {/* Ensure amount formats correctly as a number */}
+                  <p className="text-lg font-black text-slate-900 font-mono">RM{Number(receipt.amount).toFixed(2)}</p>
                 </div>
               </div>
             </div>
