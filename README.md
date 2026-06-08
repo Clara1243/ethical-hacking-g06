@@ -1,4 +1,4 @@
-# 🎓 EduUnity Connect — Cyber Range Sandbox (React + Vite)
+# 🎓 MyEduConnect (React + Vite)
 
 Welcome to **EduUnity Connect**! This is a specialized, interactive educational web application and security range designed for demonstrating real-world software vulnerabilities, ethical hacking procedures, and robust cyber-defense programming.
 
@@ -22,47 +22,106 @@ Before setting up the project locally on your machine, ensure you have the follo
 
 ## 🚀 Step-by-Step Local Setup
 
-Follow these simple steps to configure and boot up the frontend dashboard inside VS Code:
+### Phase 1: Prerequisites & Tools Verification
 
-### 1. Open the Project in VS Code
-1. Download or clone this project repository into a directory of your choice.
-2. Launch **VS Code**.
-3. Go to **File** ➔ **Open Folder...** (or `Cmd+O` on macOS / `Ctrl+O` on Windows) and select the root directory containing the `package.json` file.
+Before starting, ensure your host machine has the following tools installed and running. 
 
-### 2. Recommended VS Code Extensions
+#### 1. Docker Desktop (Required for Database)
+The MySQL database runs entirely inside a Docker container.
+* **Windows Installation (via CMD):** Run `winget install Docker.DockerDesktop` as Administrator, then restart your PC.
+* **Verification:** Open Docker Desktop and wait until the status says **"Engine running"**.
+* **Command Line Test:** Open Git Bash or CMD and run `docker compose version` to ensure the CLI is accessible.
+
+#### 2. Node.js (Required for Frontend & Backend)
+* **Installation:** Download the LTS version from the official Node.js website.
+* **Verification:** Run `node -v` and `npm -v` in your terminal. Ensure Node is at least version 18+.
+
+#### 3. Git
+* **Verification:** Run `git --version` to ensure you can clone the repository.
+
+---
+
+### Phase 2: Repository Clone & Structure
+
+1. Open your terminal (Git Bash recommended) and clone the repository:
+   ```bash
+   git clone [https://github.com/Clara1243/ethical-hacking-g06.git](https://github.com/Clara1243/ethical-hacking-g06.git)
+   cd ethical-hacking-g06
+   ```
+2. Ensure your directory structure looks like this:
+   ```
+   ethical-hacking-g06/
+   ├── docker-compose.yml       # Database container config
+   ├── database/
+   │   └── init.sql             # MySQL schema & vulnerable mock data
+   ├── server/                  # Node.js Express backend
+   │   └── server.js
+   └── src/                     # React/Vite frontend
+   ```
+
+### Phase 2: Repository Clone & Structure
+
+The database initializes automatically with the intentionally vulnerable tables and mock data required for the laboratory exercises.
+
+1. Ensure Docker Desktop is running in the background.
+2. In the root directory of the project, run the build command:
+   ```bash
+   docker compose up -d
+   ```
+3. Run:
+   ```bash
+   docker ps
+   ```
+   You should see the edu_unity_db container running on port 3306.
+
+### Phase 4: Launch the Backend API (Node.js)
+
+The backend handles the vulnerable routing (e.g., SQL Injection endpoints) and connects directly to the Docker database.
+
+1. Open new terminal tab.
+2. Navigate into the backend directory:
+   ```bash
+   cd server
+   ```
+3. Install required Node modules:
+   ```bash
+   npm install
+   ```
+4. Start server:
+   ```bash
+   node server.js
+   ```
+5. The terminal should show output, leave this terminal running:
+   ```bash
+   Backend API running on http://localhost:3000
+   ```
+
+### Phase 5: Launch Frontend UI (React/ Vite)
+1. Open a third terminal tab.
+2. Ensure you are in the root directory (ethical-hacking-g06/).
+3. Install the frontend dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
+5. The terminal will provide a local network link (usually http://localhost:5173). Ctrl+Click the link to open the platform in your browser.
+
+### Phase 6: System Verification Test
+1. Open the platform in your browser (http://localhost:5173).
+2. On the login screen, enter the mock credentials:
+   - Username/Email: alice.smith@eduunity.io
+   - Password: alice123
+3. Click Sign In.
+(Note: If you successfully route to the Course Catalog, your Vite frontend has successfully talked to your Node.js backend, which successfully queried your Docker database. The environment is now fully staged for vulnerability testing.).
+
+## 2. Recommended VS Code Extensions
 For the best styling auto-completions, syntax highlights, and developer feedback, we suggest installing the following extensions from the VS Code Marketplace:
 * **Tailwind CSS IntelliSense** (by Tailwind Labs) — Essential for class name autocomplete, previewing colors, and structural hover cards since the project is fully styled with Tailwind utility classes.
 * **TypeScript Nightly** or built-in TypeScript compiler services — For real-time type verification, parameter tooltips, and imports assistance.
 * **Prettier - Code Formatter** (by Prettier) — To maintain elegant formatting on save.
-
-### 3. Open the Integrated Terminal
-You can run all terminal tasks directly within your editor:
-* Press `` Ctrl + ` `` (control + backtick) or go to **Terminal** ➔ **New Terminal** in the top menu bar.
-
-### 4. Install Dependencies
-Run the command below in the newly opened terminal panel to install all necessary packages, compilers, and dependencies into a local `node_modules` directory:
-```bash
-npm install
-```
-
-### 5. Configure Your Local Environment Variables
-If you need custom variables (such as special sandbox flags, database endpoints, or API keys), create a `.env` file based on `.env.example`:
-```bash
-# Copy the example file to a local active file
-cp .env.example .env
-```
-*(The template is pre-configured to work straight out of the box out of offline states using local caching models, so you can skip variable declarations for simple static offline plays!)*
-
-### 6. Start the Local Interactive Dev Server
-With all developer files ready, boot the quick-reload development server:
-```bash
-npm run dev
-```
-
-Once executed successfully, your terminal will provide the target address. By default, Vite is specified to route on:
-👉 **`http://localhost:3000`**
-
-Open this address in your favorite modern browser to begin playing!
 
 ---
 
@@ -104,25 +163,6 @@ ethical-hacking-g06/
     ├── package.json         # Backend dependencies (express, mysql2, cors)
     └── server.js            # The actual API routes (/api/login, /api/register)
 ```
-
----
-
-## 🎯 Navigating the Vulnerability Labs
-
-When running **MyEduConnect** locally, you can preview three distinct penetration testing scenarios:
-
-1. **Indirect Object Reference (IDOR) - Profile & Billing Leads:**
-   * Open the **Address Bar** simulation component at the top of the viewport.
-   * Manually change the URL query parameters (e.g., modifying `?email=admin@eduunity.io` or `?receipt_id=1041` with different numeric credentials) to trigger profile takeovers and examine peer financial transactions instantly.
-
-2. **Unrestricted Arbitrary File Upload (RCE Web Shells):**
-   * Jump into the application as an **Educator** or log in with the instructor credentials.
-   * Navigate to a course syllabus control board.
-   * Upload malicious/executable files like `.php` or `.sh` scripts.
-   * Launch the interactive **Web Shell Simulator** terminal to run common Linux payloads like `whoami`, `ls -la`, or `cat secrets.json`.
-
-3. **Cross-Site Scripting (XSS):**
-   * Write unsanitized html markup inside review commentary fields to see raw document injections on subsequent client views.
 
 ---
 
