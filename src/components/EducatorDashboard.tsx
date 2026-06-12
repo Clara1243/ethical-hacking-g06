@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Course, Review } from '../types';
-import { BookOpen, Users, PlusCircle, Sparkles, TrendingUp, HelpCircle, Trophy, Plus, Check } from 'lucide-react';
+import { Course } from '../types';
+import { BookOpen, Users, PlusCircle, Sparkles, TrendingUp, Trophy } from 'lucide-react'; // Unused icons removed
 
 interface EducatorDashboardProps {
   courses: Course[];
@@ -29,7 +29,7 @@ export const EducatorDashboard: React.FC<EducatorDashboardProps> = ({
 
     // Create custom new course
     const newCourse: Course = {
-      id: `course-${Date.now()}`,
+      id: `course-${Date.now()}` as any,
       title,
       category,
       description,
@@ -75,7 +75,7 @@ export const EducatorDashboard: React.FC<EducatorDashboardProps> = ({
         </button>
       </div>
 
-      {/* Educator Performance Metrics (Requested) */}
+      {/* Educator Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 flex items-center justify-between shadow-xs">
           <div className="space-y-1">
@@ -109,7 +109,6 @@ export const EducatorDashboard: React.FC<EducatorDashboardProps> = ({
           <span className="font-bold text-gray-950 text-sm">Course Performance Charts & Tracking Logs</span>
         </div>
 
-        {/* Dynamic bar graphics built using pure CSS/HTML layouts */}
         <div className="space-y-4">
           {courses.map((course) => {
             const percentage = Math.min(100, Math.floor((course.enrolledCount / 300) * 100));
@@ -119,7 +118,6 @@ export const EducatorDashboard: React.FC<EducatorDashboardProps> = ({
                   <span className="text-gray-800 font-sans truncate pr-4">{course.title}</span>
                   <span className="text-slate-500 font-mono shrink-0">{course.enrolledCount} active students</span>
                 </div>
-                {/* Simulated chart bar */}
                 <div className="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden flex items-center relative border border-slate-200">
                   <div
                     className="h-full bg-linear-to-r from-indigo-500 to-indigo-600 rounded-full"
@@ -135,7 +133,7 @@ export const EducatorDashboard: React.FC<EducatorDashboardProps> = ({
         </div>
       </div>
 
-      {/* Create Course Modal overlay dialog (simulated) */}
+      {/* Create Course Modal overlay dialog */}
       {showCreateModal && (
         <div id="create-course-modal" className="fixed inset-0 z-55 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-gray-100 p-6 space-y-4">

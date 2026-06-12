@@ -12,3 +12,10 @@ services:
     volumes:
       # This points to the init.sql we drafted earlier to build your vulnerable tables
     - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+  
+  adminer:  # <--- This must be aligned with 'db:'
+    image: adminer
+    container_name: MyEduConnect_db_admin
+    restart: always
+    ports:
+      - "8080:8080"

@@ -1,20 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowLeft, 
-  Stars, 
-  Calendar, 
-  BookOpen, 
-  Users, 
-  BadgeCheck, 
-  DollarSign, 
-  Upload, 
-  FileText, 
-  Trash, 
-  FolderOpen
-} from 'lucide-react';
-import { Course, Receipt } from '../types';
-import { ReviewSection } from './ReviewSection';
+import { ArrowLeft, Users, FolderOpen, Upload, FileText, CheckSquare, Edit3, Save } from 'lucide-react';
+import { Course, Receipt, CourseMaterial, ActiveStudent, CourseQuiz } from '../types';
 import { CheckoutWizard } from './CheckoutWizard';
+import { ReviewSection } from './ReviewSection';
 
 interface CourseDetailPageProps {
   course: Course;
@@ -22,396 +10,287 @@ interface CourseDetailPageProps {
   userRole: 'student' | 'educator' | 'admin';
   buyerEmail: string;
   buyerName: string;
-  receipts: Receipt[];
   onBack: () => void;
   onCompleteEnrollment: (receipt: Receipt) => void;
   onAddReview: (content: string, rating: number) => void;
 }
 
-interface UploadedFile {
-  name: string;
-  type: string;
-  size: number;
-  uploadedAt: string;
-  content: string;
-}
-
 export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
-  course,
-  isEnrolled,
-  userRole,
-  buyerEmail,
-  buyerName,
-  receipts,
-  onBack,
-  onCompleteEnrollment,
-  onAddReview,
+  course, isEnrolled, userRole, buyerEmail, buyerName, onBack, onCompleteEnrollment, onAddReview
 }) => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'coursework' | 'participants'>('overview');
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  
-  // File upload states for Educator (Vulnerability: No validation logic exists here)
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(() => {
-    const saved = localStorage.getItem(`eduunity_materials_${course.id}`);
-    if (saved) return JSON.parse(saved);
-    return [
-      {
-        name: 'Syllabus_Cooperative_Growth_2026.pdf',
-        type: 'application/pdf',
-        size: 245,
-        uploadedAt: '2026-05-12 11:30',
-        content: '%PDF-1.4 Course Syllabus details...'
-      }
-    ];
-  });
+  const isEducator = userRole === 'educator';
+  const authenticatedUserId = isEducator ? course.instructor_id : 1;
 
-  const [dragActive, setDragActive] = useState(false);
+  // --- EDUCATOR EDIT STATES ---
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(course.title);
+  const [editDesc, setEditDesc] = useState(course.description);
+
+  // --- DATABASE STATES ---
+  const [materials, setMaterials] = useState<CourseMaterial[]>([]);
+  const [quizzes, setQuizzes] = useState<CourseQuiz[]>([]);
+  const [activeStudents, setActiveStudents] = useState<ActiveStudent[]>([]);
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
 
   useEffect(() => {
-    localStorage.setItem(`eduunity_materials_${course.id}`, JSON.stringify(uploadedFiles));
-  }, [uploadedFiles, course.id]);
+    if (!course.id) return;
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
+    // Fetch Materials (Corrected URL)
+    fetch(`http://localhost:3000/api/courses/${course.id}/materials`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': authenticatedUserId.toString()
+      }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+        return res.json();
+      })
+      .then(data => setMaterials(data))
+      .catch(err => console.error('Failed to fetch materials:', err));
+
+    // Fetch Feedback (Corrected URL)
+    fetch(`http://localhost:3000/api/courses/${course.id}/feedback`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': authenticatedUserId.toString()
+      }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+        return res.json();
+      })
+      .then(data => setFeedbacks(data))
+      .catch(err => console.error('Failed to fetch feedback:', err));
+
+    // Fetch Students
+    if (isEducator) {
+      fetch(`http://localhost:3000/api/courses/${course.id}/students`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': authenticatedUserId.toString()
+        }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error(`Server returned ${res.status}`);
+          return res.json();
+        })
+        .then(data => setActiveStudents(data))
+        .catch(err => console.error('Failed to fetch students:', err));
     }
-  };
+  }, [course.id, isEducator, authenticatedUserId]);
 
-  const processUpload = (name: string, type: string, sizeBytes: number, contentText: string) => {
-    const sizeKb = Math.round(sizeBytes / 1024) || 2;
-    const newFile: UploadedFile = {
-      name: name,
-      type: type || 'application/octet-stream',
-      size: sizeKb,
-      uploadedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      content: contentText,
-    };
-    setUploadedFiles(prev => [newFile, ...prev]);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result as string || '';
-        processUpload(file.name, file.type, file.size, text);
-      };
-      reader.readAsText(file);
-    }
-  };
-
-  const handleManualUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // VULNERABLE FILE UPLOAD LOGIC (Unrestricted file type & path execution logic)
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result as string || '';
-        processUpload(file.name, file.type, file.size, text);
+      const newMaterial: CourseMaterial = {
+        id: Date.now(),
+        course_id: course.id,
+        uploader_id: 2, // Assuming Educator ID
+        filename: file.name,
+        file_path: `/uploads/courses/${course.id}/${file.name}`, // Vulnerable path exposure
       };
-      reader.readAsText(file);
+      const updated = [...materials, newMaterial];
+      setMaterials(updated);
+      localStorage.setItem(`db_materials_${course.id}`, JSON.stringify(updated));
     }
   };
 
-  const handleDeleteMaterial = (fileName: string) => {
-    setUploadedFiles(prev => prev.filter(f => f.name !== fileName));
+  const handleCreateQuiz = () => {
+    const quizName = prompt("Enter new quiz title (e.g., 'Midterm Assessment'):");
+    if (quizName) {
+      const newQuiz: CourseQuiz = {
+        id: Date.now(),
+        title: quizName,
+        questions_count: 10,
+        created_at: new Date().toISOString().split('T')[0]
+      };
+      const updated = [...quizzes, newQuiz];
+      setQuizzes(updated);
+      localStorage.setItem(`db_quizzes_${course.id}`, JSON.stringify(updated));
+    }
   };
 
-  const DEFAULT_STUDENTS_BY_COURSE: Record<string, string[]> = {
-    'course-1': ['Jane Cooper', 'Alice Smith', 'Clara Oswald'],
-    'course-2': ['Sarah Jenkins', 'Marcus Aurel', 'Jane Cooper'],
-    'course-3': ['Bob Vance', 'Wade Wilson', 'Marcus Aurel'],
-    'course-4': ['Alice Smith', 'Leo Fitz', 'Jane Cooper'],
+  const handleSaveEdits = () => {
+    setIsEditing(false);
+    alert("Course details updated in database.");
   };
-
-  const enrolledFromReceipts = receipts
-    .filter(r => r.courseId === course.id)
-    .map(r => r.buyerName);
-  const allStudents = Array.from(new Set([...(DEFAULT_STUDENTS_BY_COURSE[course.id] || []), ...enrolledFromReceipts]));
 
   if (isCheckingOut) {
     return (
       <div className="py-8">
-        <CheckoutWizard
-          course={course}
-          buyerName={buyerName}
-          buyerEmail={buyerEmail}
-          onComplete={(receipt) => {
-            setIsCheckingOut(false);
-            onCompleteEnrollment(receipt);
-          }}
-          onCancel={() => setIsCheckingOut(false)}
-        />
+        <CheckoutWizard course={course} buyerName={buyerName} buyerEmail={buyerEmail} onComplete={(r) => { setIsCheckingOut(false); onCompleteEnrollment(r); }} onCancel={() => setIsCheckingOut(false)} />
       </div>
     );
   }
 
-  const isEducator = userRole === 'educator';
-
   return (
-    <div id="course-detail-container" className="max-w-4xl mx-auto py-8 px-4">
-      <button
-        id="back-to-courses-button"
-        onClick={onBack}
-        className="flex items-center gap-2 text-indigo-600 hover:text-indigo-500 font-medium mb-6 transition-colors group cursor-pointer"
-      >
-        <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-        Back to Course Catalog
+    <div className="max-w-5xl mx-auto py-8 px-4">
+      <button onClick={onBack} className="flex items-center gap-2 text-indigo-600 hover:text-indigo-500 font-bold text-sm mb-6 transition-colors cursor-pointer">
+        <ArrowLeft size={16} /> Back to Dashboard
       </button>
 
-      {/* Course Hero Header */}
-      <div className={`text-white rounded-2xl overflow-hidden shadow-lg border mb-8 ${isEducator ? 'bg-teal-950 border-teal-800' : 'bg-slate-900 border-slate-800'}`}>
-        <div className="md:flex">
-          <div className="md:w-1/2 relative h-64 md:h-auto">
-            <img
-              src={course.image}
-              alt={course.title}
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-slate-950 to-transparent opacity-80" />
-            <div className="absolute top-4 left-4">
-              <span className={`px-3 py-1 font-bold tracking-wide uppercase text-[10px] rounded border ${isEducator ? 'bg-teal-600 border-teal-400' : 'bg-indigo-600 border-indigo-400'}`}>
-                {course.category}
-              </span>
-            </div>
-          </div>
-
-          <div className="md:w-1/2 p-6 md:p-8 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-100">
-                  {course.title}
-                </h2>
-              </div>
-              <p className="text-xs text-indigo-300 font-mono mb-4">
-                Instructed by <span className="font-bold underline">{course.instructor}</span>
-              </p>
-              <div className="flex items-center gap-4 mb-4 text-xs text-slate-300 font-mono">
-                <span className="flex items-center gap-1">
-                  <Calendar size={13} /> {course.duration}
-                </span>
-                <span className="flex items-center gap-1">
-                  <BookOpen size={13} /> {course.modulesCount} Modules
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users size={13} /> {allStudents.length} Registered Peers
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 mb-6 text-slate-200">
-                <div className="flex items-center text-amber-400">
-                  <Stars size={14} className="fill-amber-400 text-amber-400" />
-                </div>
-                <span className="text-sm font-bold">{course.rating}</span>
-                <span className="text-xs text-slate-400">({course.reviews?.length || 0} reviews)</span>
-              </div>
-            </div>
-
-            <div>
-              {isEducator ? (
-                <div className="bg-teal-900/60 border border-teal-800 p-3 rounded-lg text-teal-200 text-xs flex items-center gap-2">
-                  <BadgeCheck size={18} className="text-teal-400 shrink-0" />
-                  <div>
-                    <p className="font-bold">Signed in as Course Instructor</p>
-                    <p className="text-[10px] text-teal-300 mt-0.5">Manage materials and monitor student enrollment below.</p>
-                  </div>
-                </div>
-              ) : isEnrolled ? (
-                <div className="flex items-center gap-2 bg-emerald-950/55 border border-emerald-800 p-3 rounded-lg text-emerald-200 text-xs">
-                  <BadgeCheck size={18} className="text-emerald-400 shrink-0" />
-                  <div>
-                    <p className="font-bold">You are enrolled in this course!</p>
-                    <p className="text-[10px] text-emerald-400/80 mt-0.5">Access syllabus blocks and collaborate with peers.</p>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  id="enroll-checkout-button"
-                  onClick={() => setIsCheckingOut(true)}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-bold rounded-lg transition-all transform hover:-translate-y-0.5 cursor-pointer shadow-md"
-                >
-                  <DollarSign size={16} />
-                  Enroll Now (${course.price ? course.price.toFixed(2) : '149.00'})
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Left Side Column: Syllabus summary */}
-        <div className="bg-white rounded-xl col-span-2 shadow-xs border border-gray-100 p-6 md:p-8 space-y-4">
-          <h3 className="text-md font-extrabold text-slate-800">Course Information</h3>
-          <p className="text-gray-600 text-xs leading-relaxed">
-            {course.longDescription || course.description}
-          </p>
-
-          <h4 className="text-[10px] font-bold text-indigo-400 tracking-wider uppercase mb-2">Curriculum Blocks</h4>
-          <div className="grid grid-cols-1 gap-3">
-            <div className="p-3 bg-slate-50 rounded-lg border border-gray-100">
-              <span className="text-xs font-bold text-slate-800">Unit 1: Introduction & Fundamentals</span>
-              <p className="text-[10px] text-slate-500 mt-0.5">Establishing core concepts and terminology for the modules ahead.</p>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-gray-100">
-              <span className="text-xs font-bold text-slate-800">Unit 2: Practical Application</span>
-              <p className="text-[10px] text-slate-500 mt-0.5">Hands-on exercises and real-world scenario mapping.</p>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-gray-100">
-              <span className="text-xs font-bold text-slate-800">Unit 3: Final Assessment</span>
-              <p className="text-[10px] text-slate-500 mt-0.5">Comprehensive review and final project submission guidelines.</p>
-            </div>
-          </div>
+      {/* Course Header */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm mb-6">
+        <div className="flex justify-between items-start mb-4">
+          <span className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold font-mono rounded border border-slate-200">
+            {course.course_code}
+          </span>
+          {isEducator && !isEditing && (
+            <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 cursor-pointer">
+              <Edit3 size={14} /> Edit Course
+            </button>
+          )}
+          {isEducator && isEditing && (
+            <button onClick={handleSaveEdits} className="flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-600 px-3 py-1.5 rounded-lg hover:bg-emerald-500 cursor-pointer">
+              <Save size={14} /> Save Changes
+            </button>
+          )}
         </div>
 
-        {/* Right Side Column */}
-        {isEducator ? (
-          <div className="bg-white rounded-xl col-span-1 border border-teal-100 p-6 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-2.5 border-b border-teal-150 text-teal-800">
-              <Users size={16} className="text-teal-600" />
-              <span className="font-extrabold text-xs uppercase tracking-wider">Class Roster</span>
-            </div>
-            <p className="text-[10px] text-gray-500 leading-normal">
-              Students currently enrolled in your module:
-            </p>
-            <div id="educator-roster-list" className="space-y-2.5 max-h-64 overflow-y-auto">
-              {allStudents.map((name, i) => (
-                <div key={i} className="flex items-center gap-2.5 p-2 bg-teal-50/50 rounded-lg border border-teal-100/50">
-                  <div className="w-6.5 h-6.5 rounded-full bg-teal-600 text-white font-bold text-[10px] flex items-center justify-center">
-                    {name.substring(0, 2).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-xs font-bold text-slate-800 block truncate">{name}</span>
-                    <span className="text-[9px] text-teal-600/80 font-mono">Active</span>
-                  </div>
-                </div>
-              ))}
-              {allStudents.length === 0 && (
-                <p className="text-[10px] text-gray-400 text-center py-4">No enrollments yet.</p>
-              )}
-            </div>
-          </div>
+        {isEditing ? (
+          <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="w-full text-2xl font-bold text-slate-900 border border-gray-300 rounded p-2 mb-2" />
         ) : (
-          <div className="bg-white rounded-xl col-span-1 border border-gray-100 p-6 shadow-xs space-y-4">
-            <div className="flex items-center gap-1.5 pb-2.5 border-b border-gray-150 text-indigo-850">
-              <BookOpen size={14} className="text-indigo-600" />
-              <span className="font-extrabold text-xs uppercase tracking-wider">Course Requirements</span>
-            </div>
-            <p className="text-[10px] text-gray-500 leading-relaxed">
-              To succeed in this course, please ensure you meet the following prerequisites:
-            </p>
-            <div className="p-3 bg-slate-50 border border-gray-150 rounded-lg text-[10px] text-slate-600 leading-relaxed">
-              <ul className="list-disc pl-3.5 space-y-1.5">
-                <li>A stable internet connection for live sessions.</li>
-                <li>Basic understanding of the subject matter.</li>
-                <li>Commitment of 4-6 hours per week.</li>
-              </ul>
-            </div>
-          </div>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2">{editTitle}</h1>
+        )}
+        
+        <p className="text-sm text-gray-500 mb-6">Course Administrator ID: {course.instructor_id}</p>
+
+        {!isEnrolled && !isEducator && (
+          <button onClick={() => setIsCheckingOut(true)} className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg shadow-md transition-all cursor-pointer">
+            Enroll in Module (${Number(course.price).toFixed(2)})
+          </button>
         )}
       </div>
 
-      {/* EDUCATOR MATERIAL MANAGEMENT */}
-      {isEducator && (
-        <div className="bg-white rounded-2xl border border-teal-100 p-6 shadow-sm mb-8 space-y-6">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-            <div className="space-y-1">
-              <h3 className="text-md font-extrabold text-teal-950 flex items-center gap-1.5">
-                <FolderOpen size={18} className="text-teal-600" />
-                Course Materials Manager
-              </h3>
-              <p className="text-[11px] text-gray-500">Upload documents, assignments, and slides for your students.</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Upload Area */}
-            <div className="space-y-2">
-              <div 
-                onDragEnter={handleDrag}
-                onDragOver={handleDrag}
-                onDragLeave={handleDrag}
-                onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer flex flex-col items-center justify-center gap-3 ${
-                  dragActive ? 'border-indigo-500 bg-indigo-50/20' : 'border-gray-200 hover:bg-slate-50'
-                }`}
-              >
-                <Upload size={24} className="text-gray-400 shrink-0" />
-                <div>
-                  <span className="text-sm font-bold text-slate-700 block">Click or drag files here</span>
-                  <span className="text-xs text-gray-400">Maximum file size: 50MB</span>
-                </div>
-                <input 
-                  type="file" 
-                  id="material-file-upload-input" 
-                  className="hidden" 
-                  onChange={handleManualUpload}
-                />
-                <label 
-                  htmlFor="material-file-upload-input"
-                  className="mt-2 px-4 py-1.5 bg-white border border-gray-200 hover:border-teal-500 hover:text-teal-600 text-slate-600 rounded-lg text-xs font-bold cursor-pointer transition-all shadow-sm"
-                >
-                  Browse Files
-                </label>
-              </div>
-            </div>
-
-            {/* File List */}
-            <div className="space-y-3.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">Uploaded Files</span>
-                <span className="text-[10px] text-gray-400">{uploadedFiles.length} item(s)</span>
-              </div>
-
-              <div id="server-filesystem-list" className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {uploadedFiles.map((file, i) => (
-                  <div key={i} className="p-3 rounded-xl border bg-white border-gray-200 flex items-center justify-between gap-3 shadow-xs">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="p-2 bg-slate-50 rounded-lg">
-                        <FileText size={16} className="text-teal-600 shrink-0" />
-                      </div>
-                      <div className="min-w-0">
-                        <span className="text-xs font-bold text-slate-700 block truncate" title={file.name}>
-                          {file.name}
-                        </span>
-                        <span className="text-[10px] text-gray-400 block mt-0.5">
-                          {file.size} KB • Uploaded {file.uploadedAt.split(' ')[0]}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center shrink-0">
-                      <button
-                        onClick={() => handleDeleteMaterial(file.name)}
-                        className="p-2 hover:bg-rose-50 rounded-lg text-gray-400 hover:text-rose-600 transition-colors cursor-pointer"
-                        title="Delete file"
-                      >
-                        <Trash size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {uploadedFiles.length === 0 && (
-                  <div className="text-center py-8 border border-dashed border-gray-200 rounded-xl">
-                    <p className="text-xs text-gray-400">No materials uploaded yet.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+      {/* Tabs */}
+      {(isEnrolled || isEducator) && (
+        <div className="flex gap-2 border-b border-gray-200 mb-6 overflow-x-auto">
+          <button onClick={() => setActiveTab('overview')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors cursor-pointer ${activeTab === 'overview' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>Overview & Feedback</button>
+          <button onClick={() => setActiveTab('coursework')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 cursor-pointer ${activeTab === 'coursework' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>Coursework & Materials</button>
+          {isEducator && (
+            <button onClick={() => setActiveTab('participants')} className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 cursor-pointer ${activeTab === 'participants' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-800'}`}>Participants</button>
+          )}
         </div>
       )}
 
-      {/* Course Reviews */}
-      <ReviewSection reviews={course.reviews || []} onAddReview={onAddReview} />
+      {/* TAB CONTENT: OVERVIEW */}
+      {(!isEnrolled && !isEducator) || activeTab === 'overview' ? (
+        <div className="space-y-8">
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">Course Description</h3>
+            {isEditing ? (
+              <textarea rows={5} value={editDesc} onChange={(e) => setEditDesc(e.target.value)} className="w-full text-sm text-gray-700 border border-gray-300 rounded p-3" />
+            ) : (
+              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{editDesc}</p>
+            )}
+          </div>
+          
+          <ReviewSection reviews={feedbacks} onAddReview={onAddReview} />
+        </div>
+      ) : null}
+
+      {/* TAB CONTENT: COURSEWORK */}
+      {activeTab === 'coursework' && (isEnrolled || isEducator) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2"><FolderOpen size={20} className="text-indigo-600"/> Documents & Files</h3>
+              {isEducator && (
+                <div>
+                  <input type="file" id="file-upload" className="hidden" onChange={handleFileUpload} />
+                  <label htmlFor="file-upload" className="px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-bold rounded-lg cursor-pointer flex items-center gap-1 border border-indigo-200">
+                    <Upload size={14} /> Upload File
+                  </label>
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-3">
+              {materials.length === 0 && <p className="text-sm text-gray-500 italic">No materials have been uploaded yet.</p>}
+              {materials.map((file) => (
+                <div key={file.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-slate-50 hover:bg-white transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-indigo-100 text-indigo-600 rounded"><FileText size={16}/></div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">{file.filename}</p>
+                      <p className="text-[10px] text-gray-400 font-mono">Path: {file.file_path}</p>
+                    </div>
+                  </div>
+                  <button className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer">Download</button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2"><CheckSquare size={20} className="text-emerald-600"/> Assessments</h3>
+              {isEducator && (
+                <button onClick={handleCreateQuiz} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold rounded-lg cursor-pointer border border-emerald-200">
+                  Create Quiz Form
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              {quizzes.length === 0 && <p className="text-sm text-gray-500 italic">No assessments available.</p>}
+              {quizzes.map((quiz) => (
+                <div key={quiz.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-slate-50 hover:bg-white transition-colors">
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">{quiz.title}</p>
+                    <p className="text-[10px] text-gray-500 mt-1">{quiz.questions_count} Questions • Created {quiz.created_at}</p>
+                  </div>
+                  <button className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded hover:bg-emerald-500 cursor-pointer transition-colors">
+                    {isEducator ? 'Edit Quiz' : 'Attempt Quiz'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* TAB CONTENT: PARTICIPANTS */}
+      {activeTab === 'participants' && isEducator && (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Users size={20} className="text-indigo-600"/> Active Students List</h3>
+            <p className="text-xs text-gray-500 mt-1">Data synchronized from registered_courses database table.</p>
+          </div>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500">
+                <th className="p-4 font-bold">Student ID</th>
+                <th className="p-4 font-bold">Name</th>
+                <th className="p-4 font-bold">Email</th>
+                <th className="p-4 font-bold">Enrollment Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {activeStudents.map((student) => (
+                <tr key={student.id} className="hover:bg-slate-50">
+                  <td className="p-4 text-sm font-mono text-gray-600">{student.id}</td>
+                  <td className="p-4 text-sm font-bold text-slate-800 capitalize">{student.username}</td>
+                  <td className="p-4 text-sm font-mono text-indigo-600">{student.email}</td>
+                  <td className="p-4 text-sm text-gray-600">{student.enroll_date}</td>
+                </tr>
+              ))}
+              {activeStudents.length === 0 && (
+                <tr><td colSpan={4} className="p-8 text-center text-gray-500 text-sm">No students currently enrolled.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

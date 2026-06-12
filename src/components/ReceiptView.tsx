@@ -1,24 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Printer } from 'lucide-react';
-import { Receipt } from '../types';
 
 interface ReceiptViewProps {
   receiptId: number;
-  receipts: Receipt[]; // Kept so App.tsx doesn't throw errors
+  currentUserId: number;
   currentUserEmail: string;
   onBack: () => void;
 }
 
-export const ReceiptView: React.FC<ReceiptViewProps> = ({ receiptId, onBack }) => {
-  // Add state to hold the database data
+export const ReceiptView: React.FC<ReceiptViewProps> = ({ receiptId, currentUserId, onBack }) => {
   const [receipt, setReceipt] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // CRITICAL FIX: Fetch the data from the Node.js Backend API!
   useEffect(() => {
     setIsLoading(true);
-    fetch(`/api/receipts/${receiptId}`)
-      .then(res => res.json())
+    fetch(`http://localhost:3000/api/receipts/${receiptId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': currentUserId.toString()
+      }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+        return res.json();
+      })
       .then(data => {
         if (data.error || !data.id) setReceipt(null);
         else setReceipt(data);
@@ -28,7 +34,7 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ receiptId, onBack }) =
         setReceipt(null);
       })
       .finally(() => setIsLoading(false));
-  }, [receiptId]);
+  }, [receiptId, currentUserId]);
 
   if (isLoading) {
     return (
@@ -49,7 +55,7 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ receiptId, onBack }) =
         <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center space-y-4">
           <div className="mx-auto w-12 h-12 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500 font-bold text-lg font-mono">!</div>
           <h3 className="text-md font-bold text-gray-800">Invoice Reference Access Denied</h3>
-          <p className="text-xs text-gray-400 max-w-sm mx-auto">The requested invoice index does not map to any active accounts.</p>
+          <p className="text-xs text-gray-400 max-w-sm mx-auto">The requested invoice index does not map to any active accounts or you lack permissions.</p>
           <button onClick={onBack} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg transition-colors cursor-pointer">Return</button>
         </div>
       ) : (
@@ -94,7 +100,6 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ receiptId, onBack }) =
                 </div>
                 <div className="text-right space-y-0.5">
                   <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider font-mono">Total Paid</span>
-                  {/* Ensure amount formats correctly as a number */}
                   <p className="text-lg font-black text-slate-900 font-mono">RM{Number(receipt.amount).toFixed(2)}</p>
                 </div>
               </div>

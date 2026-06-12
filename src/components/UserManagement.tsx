@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { UserProfile, UserRole } from '../types';
-import { PlusCircle, Trash2, ShieldCheck, ShieldAlert, User, Mail, Shield, UserPlus, X, Check, CircleAlert } from 'lucide-react';
+import { UserProfile, Role } from '../types';
+import { PlusCircle, Trash2, UserPlus, X, Check } from 'lucide-react';
 
 interface UserManagementProps {
   users: Record<string, UserProfile>;
@@ -14,7 +14,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   const [showAddModal, setShowAddModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
-  const [newRole, setNewRole] = useState<UserRole>('student');
+  const [newRole, setNewRole] = useState<Role>('student');
   const [newBio, setNewBio] = useState('');
   const [alertMsg, setAlertMsg] = useState<string | null>(null);
 
@@ -29,7 +29,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     triggerAlert(`Toggled status of ${updatedUsers[key].name} to ${updatedUsers[key].status}!`);
   };
 
-  const handleChangeRole = (key: string, role: UserRole) => {
+  const handleChangeRole = (key: string, role: Role) => {
     const updatedUsers = { ...users };
     updatedUsers[key] = {
       ...updatedUsers[key],
@@ -53,9 +53,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({
     e.preventDefault();
     if (!newName.trim() || !newEmail.trim()) return;
 
-    // Create unique key based on name slug or lower string
+    // Create unique key based on name slug
     const userKey = newName.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now();
     const newUser: UserProfile = {
+      id: Date.now(), // Assign a mock numeric ID
+      username: newName,
       name: newName,
       email: newEmail,
       role: newRole,
@@ -63,7 +65,6 @@ export const UserManagement: React.FC<UserManagementProps> = ({
       avatar: newRole === 'educator' 
         ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150'
         : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
-      enrolledCourses: [],
       status: 'Active'
     };
 
@@ -92,14 +93,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
   return (
     <div id="user-management-panel" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
       
-      {/* Table Header and Add New button */}
       <div className="flex items-center justify-between border-b border-gray-100 pb-3">
         <div className="space-y-1">
           <h3 className="text-md font-extrabold text-slate-800">User Identity Management</h3>
           <p className="text-[11px] text-gray-400">Total Records: {Object.keys(users).length} registered community members.</p>
         </div>
         <button 
-          id="btn-add-new-user-header"
           onClick={() => setShowAddModal(true)}
           className="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-600 rounded-lg flex items-center gap-1 text-xs font-bold transition-all cursor-pointer"
           title="Create New User Account"
@@ -116,9 +115,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         </div>
       )}
 
-      {/* Users Database Table */}
       <div className="overflow-x-auto">
-        <table id="tbl-users-registry" className="w-full text-left border-collapse text-xs">
+        <table className="w-full text-left border-collapse text-xs">
           <thead>
             <tr className="border-b border-gray-200 text-slate-400 font-mono font-bold uppercase text-[9px] tracking-wider">
               <th className="py-2.5 px-2">Member Info</th>
@@ -141,19 +139,17 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                       referrerPolicy="no-referrer"
                     />
                     <div className="min-w-0">
-                      <span className="font-semibold text-slate-800 block leading-tight text-[11px]">{u.name}</span>
+                      <span className="font-semibold text-slate-800 block leading-tight text-[11px]">{u.name || u.username}</span>
                       <span className="text-[9px] text-gray-400 truncate block font-mono">{u.email}</span>
                     </div>
                   </td>
 
-                  {/* Privilege cell representation */}
                   <td className="py-3 px-2">
                     <div className="flex items-center gap-1.5">
                       <select 
-                        id={`user-role-selector-${key}`}
                         className="text-[11px] font-mono font-bold bg-white border border-gray-200 rounded px-2 py-0.5"
                         value={u.role}
-                        onChange={(e) => handleChangeRole(key, e.target.value as UserRole)}
+                        onChange={(e) => handleChangeRole(key, e.target.value as Role)}
                       >
                         <option value="student">Student</option>
                         <option value="educator">Educator</option>
@@ -162,10 +158,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     </div>
                   </td>
 
-                  {/* Status Toggle cell */}
                   <td className="py-3 px-2">
                     <button
-                      id={`btn-user-status-toggle-${key}`}
                       onClick={() => handleToggleStatus(key)}
                       className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono tracking-wider uppercase font-bold cursor-pointer transition-colors ${
                         currentStatus === 'Active' 
@@ -177,10 +171,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                     </button>
                   </td>
 
-                  {/* Delete row button */}
                   <td className="py-3 px-2 text-right">
                     <button
-                      id={`btn-delete-user-row-${key}`}
                       onClick={() => handleDeleteUser(key)}
                       className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
                       title="Decommission User Account"
@@ -195,10 +187,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({
         </table>
       </div>
 
-      {/* Add User Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Overlay */}
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" onClick={() => setShowAddModal(false)} />
           
           <div className="relative bg-white rounded-2xl border border-gray-200 w-full max-w-sm p-6 shadow-xl animate-scale-up z-10 space-y-4">
@@ -212,13 +202,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleAddUser} className="space-y-4.5 text-xs">
+            <form onSubmit={handleAddUser} className="space-y-4 text-xs">
               <div>
                 <label className="text-[10px] font-bold text-gray-400 block mb-1">Full Identity Name</label>
                 <input 
                   type="text" 
                   required 
-                  required-id="add-user-name-input"
                   placeholder="e.g. Liam Oswald"
                   className="w-full bg-slate-50 border border-gray-200 p-2 rounded-lg"
                   value={newName}
@@ -231,7 +220,6 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <input 
                   type="email" 
                   required 
-                  required-id="add-user-email-input"
                   placeholder="email@eduunity.io"
                   className="w-full bg-slate-50 border border-gray-200 p-2 rounded-lg font-mono"
                   value={newEmail}
@@ -244,7 +232,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({
                 <select 
                   className="w-full bg-slate-50 border border-gray-200 p-2 rounded-lg font-bold"
                   value={newRole}
-                  onChange={(e) => setNewRole(e.target.value as UserRole)}
+                  onChange={(e) => setNewRole(e.target.value as Role)}
                 >
                   <option value="student">Student Authority</option>
                   <option value="educator">Educator Authority</option>
