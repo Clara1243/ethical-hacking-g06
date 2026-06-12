@@ -1,93 +1,89 @@
 CREATE DATABASE IF NOT EXISTS MyEduConnect_db;
 USE MyEduConnect_db;
 
--- 1. Users Table (Supports UserManagement.tsx & ProfilePage.tsx)
+-- 1. Unified Authentication & User Info
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL, -- Vulnerability: Plain text for Cryptographic weakness
+    password VARCHAR(255) NOT NULL, -- VULNERABILITY: Plain text passwords
     role ENUM('student', 'educator', 'admin') DEFAULT 'student',
-    bio TEXT, -- Target for IDOR / XSS on the ProfilePage
+    dob DATE, 
+    bio TEXT, 
     status ENUM('active', 'suspended') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Courses Table (Supports CourseCatalog.tsx & EducatorDashboard.tsx)
+-- 2. Courses Table
 CREATE TABLE courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    instructor_id INT NOT NULL,
+    course_code VARCHAR(20) UNIQUE,
     title VARCHAR(150) NOT NULL,
     description TEXT NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
+    rating DECIMAL(3, 2) DEFAULT 0.00,
+    instructor_id INT NOT NULL,
     FOREIGN KEY (instructor_id) REFERENCES users(id)
 );
 
--- 3. Receipts/Transactions Table (Supports BillingHistory.tsx & ReceiptView.tsx)
+-- 3. Registered Courses (Maps students to courses)
+CREATE TABLE registered_courses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    course_id INT NOT NULL,
+    status ENUM('enrolled', 'completed', 'dropped') DEFAULT 'enrolled',
+    enroll_date DATE DEFAULT (CURRENT_DATE),
+    finish_date DATE NULL,
+    FOREIGN KEY (student_id) REFERENCES users(id),
+    FOREIGN KEY (course_id) REFERENCES courses(id)
+);
+
+-- 4. Exam Grades
+CREATE TABLE exam_grades (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    course_id INT NOT NULL,
+    grade VARCHAR(5) NOT NULL,
+    issued_date DATE DEFAULT (CURRENT_DATE),
+    graded_by INT NOT NULL, -- Teacher ID
+    FOREIGN KEY (student_id) REFERENCES users(id),
+    FOREIGN KEY (course_id) REFERENCES courses(id),
+    FOREIGN KEY (graded_by) REFERENCES users(id)
+);
+
+-- 5. Receipts / Payments
 CREATE TABLE receipts (
-    id INT AUTO_INCREMENT PRIMARY KEY, -- Vulnerability: Sequential IDs for IDOR attacks
+    id INT AUTO_INCREMENT PRIMARY KEY, -- VULNERABILITY: Sequential IDs for IDOR
     user_id INT NOT NULL,
     course_id INT NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
     payment_method VARCHAR(50),
-    account_number VARCHAR(50), -- New SENSITIVE column added for IDOR exploitation
+    account_number VARCHAR(50), -- SENSITIVE data for IDOR exploit
     transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (course_id) REFERENCES courses(id)
 ) AUTO_INCREMENT=1000;
 
--- 4. Course Materials (Supports the Vulnerable File Upload in CourseDetailPage.tsx)
+-- 6. Course Materials 
 CREATE TABLE course_materials (
     id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
     uploader_id INT NOT NULL,
     filename VARCHAR(255) NOT NULL,
-    file_path VARCHAR(255) NOT NULL, -- Vulnerability: Storing path for directory traversal/execution
+    file_path VARCHAR(255) NOT NULL, 
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES courses(id),
     FOREIGN KEY (uploader_id) REFERENCES users(id)
 );
 
--- ==========================================
--- INSERT MOCK DATA FOR EDUUNITY PLATFORM
--- ==========================================
-
--- 1. Insert Users (VULNERABILITY: Plain text passwords for Crypto Weakness)
-INSERT INTO users (id, username, email, password, role, bio) VALUES 
-(1,'admin','admin@eduunity.io', 'admin123', 'admin', 'Head of system-wide services and role management. Directs site stability, course catalogs, and payment histories.'),
-(2, 'helen vance', 'helen.vance@eduunity.io', 'helen123', 'educator', 'Associate Professor of Computer Science at EduUnity Connect. Enthusiastic advocate of open-source team initiatives.'),
-(3, 'alice smith', 'alice.smith@eduunity.io', 'alice123', 'student', 'Avid learner specializing in network security and cooperative software projects. Believes coding is a team sport.'),
-(4, 'jane cooper', 'jane.cooper@eduunity.io', 'jane123', 'student', 'Dedicated student focusing on synergistic development.'),
-(5, 'bob vance', 'bob.vance@vancerefrigeration.com', 'bob123', 'student', 'Student exploring cooperative threat intelligence.');
-
--- 2. Insert Courses (Linked to Instructor ID 2: Dr. Helen Vance)
-INSERT INTO courses (id, instructor_id, title, description, price) VALUES 
-(1, 2, 'Synergistic Software Development & Version Control', 'Learn the power of cooperative coding. Master Git branch strategies, group refactoring, and code review etiquette.', 149.00),
-(2, 2, 'Shared Ledger Auditing & Collaborative Accounting', 'Explore multi-organization balance sheets, collaborative spreadsheet structures, and cooperative governance systems.', 99.00),
-(3, 2, 'Cooperative Threat Intelligence & Red/Blue Team Defense', 'Understand unified cyber-defense strategies. Implement shared security operations centers and cooperative pen testing.', 199.00),
-(4, 2, 'Cooperative Dynamics in Modern Psychology', 'Analyze group cohesion, cooperative game theory, empathy-driven consensus building, and structural conflict resolution.', 129.00);
-
--- 3. Insert Reviews (VULNERABILITY: Prepped for Stored XSS tests)
-CREATE TABLE reviews (
+-- 7. Course Feedback (Replaces reviews)
+CREATE TABLE course_feedback (
     id INT AUTO_INCREMENT PRIMARY KEY,
     course_id INT NOT NULL,
     user_id INT NOT NULL,
-    review_text TEXT,
-    date DATE DEFAULT (CURRENT_DATE),
+    content TEXT NOT NULL, -- VULNERABILITY: Prepped for Stored XSS
+    rating INT DEFAULT 5, -- Added Rating column
+    date_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES courses(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
-
-INSERT INTO reviews (course_id, user_id, review_text) VALUES 
-(1, 3, 'This course completely transformed how our software project team coordinates work. Highly recommended!'),
-(1, 4, 'Excellent section on pull request conflicts and peer review culture.'),
-(2, 5, 'Very detailed breakdown of joint ventures and sharing audits. A must-watch helper for co-op financial experts.');
-
-
--- 4. Insert Receipts/Transactions (VULNERABILITY: Plaintext financial data & Sequential IDs)
-ALTER TABLE receipts AUTO_INCREMENT = 1041;
-INSERT INTO receipts (user_id, course_id, amount, payment_method, account_number, transaction_date) VALUES 
-(4, 1, 149.00, 'Mastercard', '2345 1863 3456 5555', '2026-05-10 14:32:00'),
-(5, 3, 199.00, 'DuitNow', '+60 12-345 6789', '2026-05-15 09:12:00'),
-(4, 2, 99.00, 'FPX Online Banking', 'Maybank 114123456789', '2026-05-18 11:45:00'),
-(3, 4, 129.00, 'Visa', '7389 8989 3241 4242', '2026-05-20 16:50:00');

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Course, PaymentReceipt } from '../types';
+import { Course, Receipt } from '../types';
 import { 
   CreditCard, 
   Wallet, 
@@ -8,17 +8,14 @@ import {
   ShieldAlert, 
   Lock, 
   ArrowRight,
-  ArrowLeft,
-  DollarSign,
-  AlertTriangle,
-  Code
+  ArrowLeft
 } from 'lucide-react';
 
 interface CheckoutWizardProps {
   course: Course;
   buyerName: string;
   buyerEmail: string;
-  onComplete: (receipt: PaymentReceipt) => void;
+  onComplete: (receipt: Receipt) => void;
   onCancel: () => void;
 }
 
@@ -32,10 +29,10 @@ export const CheckoutWizard: React.FC<CheckoutWizardProps> = ({
   const [step, setStep] = useState<2 | 3 | 4>(2);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'ewallet' | 'banking'>('card');
   
-  // Hidden inputs & parameter tampering simulation state
   const originalPrice = 149.00;
-  const [hiddenAmount, setHiddenAmount] = useState<string>('149.00');
-  const [isTampered, setIsTampered] = useState<boolean>(false);
+  
+  // State to capture the potentially tampered DOM value for the receipt
+  const [tamperedAmount, setTamperedAmount] = useState<number>(originalPrice);
 
   // Form Details
   const [bankAccount, setBankAccount] = useState('');
@@ -49,16 +46,6 @@ export const CheckoutWizard: React.FC<CheckoutWizardProps> = ({
 
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  const handlePriceTamper = (newVal: string) => {
-    setHiddenAmount(newVal);
-    const floatVal = parseFloat(newVal);
-    if (!isNaN(floatVal) && floatVal !== originalPrice) {
-      setIsTampered(true);
-    } else {
-      setIsTampered(false);
-    }
-  };
-
   const handleProceedToPayment = (e: React.FormEvent) => {
     e.preventDefault();
     setStep(3);
@@ -66,6 +53,11 @@ export const CheckoutWizard: React.FC<CheckoutWizardProps> = ({
 
   const handleCompletePayment = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Read directly from the DOM to allow classic hidden field tampering via DevTools
+    const amountInput = document.getElementById('secure-hidden-amount-input') as HTMLInputElement | null;
+    const currentVal = amountInput ? parseFloat(amountInput.value) : originalPrice;
+    setTamperedAmount(isNaN(currentVal) ? originalPrice : currentVal);
     
     // Simple mock validation of fields
     if (paymentMethod === 'banking' && (!bankAccount.trim() || !selectedBank)) {
@@ -86,7 +78,6 @@ export const CheckoutWizard: React.FC<CheckoutWizardProps> = ({
   };
 
   const handleFinalize = () => {
-    const finalAmount = parseFloat(hiddenAmount);
     const invoiceId = Math.floor(Math.random() * 90000) + 10000;
     
     // Format payment method display text
@@ -101,10 +92,10 @@ export const CheckoutWizard: React.FC<CheckoutWizardProps> = ({
       methodText = `Visa •••• ${lastDigits}`;
     }
 
-    const newReceipt: PaymentReceipt = {
+    const newReceipt: Receipt = {
       id: invoiceId,
       date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      amount: isNaN(finalAmount) ? 149.00 : finalAmount,
+      amount: tamperedAmount,
       courseId: course.id,
       courseTitle: course.title,
       buyerName: buyerName,
@@ -118,7 +109,7 @@ export const CheckoutWizard: React.FC<CheckoutWizardProps> = ({
   };
 
   return (
-    <div id="checkout- wizard-box" className="bg-slate-50 border border-gray-200 rounded-2xl p-6 shadow-sm max-w-2xl mx-auto my-6 space-y-6">
+    <div id="checkout-wizard-box" className="bg-slate-50 border border-gray-200 rounded-2xl p-6 shadow-sm max-w-2xl mx-auto my-6 space-y-6">
       {/* Checkout Progress Header bar */}
       <div className="flex items-center justify-between border-b border-gray-150 pb-4">
         <div>
@@ -149,44 +140,11 @@ export const CheckoutWizard: React.FC<CheckoutWizardProps> = ({
             </div>
           </div>
 
-          {/* Hidden Form Representation - CRITICAL Requirement */}
+          {/* Hidden Form Representation - Vulnerable to DOM manipulation */}
           <div className="hidden">
             <input type="hidden" name="course_id" value={course.id} />
-            <input type="hidden" id="secure-hidden-amount-input" name="amount" value={hiddenAmount} />
+            <input type="hidden" id="secure-hidden-amount-input" name="amount" defaultValue={originalPrice.toFixed(2)} />
             <input type="hidden" name="buyer" value={buyerEmail} />
-          </div>
-
-          {/* HTTP Request Tampering Box (Edu pen-testing card) */}
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
-            <div className="flex items-center gap-2 text-amber-800">
-              <Code size={16} className="text-amber-600" />
-              <span className="text-xs font-black uppercase tracking-wider">Pentest Lab: Parameter Tampering</span>
-            </div>
-            <p className="text-[11px] text-amber-700/90 leading-relaxed">
-              When you click &ldquo;Proceed to Payment&rdquo;, the app sends the purchase amount as a **hidden input field** inside the form request. In secure backends, price calculations must be stored database-side. In this vulnerable setup, you can edit the price value to test the server validation!
-            </p>
-            <div className="flex items-center gap-3 bg-white p-2.5 rounded-lg border border-amber-200">
-              <div className="flex-1 font-mono text-[10px] text-slate-600">
-                &lt;input type=&quot;hidden&quot; name=&quot;amount&quot; value=&quot;
-                <span className="font-bold text-amber-600 bg-amber-50 px-1 border border-amber-200 rounded">{hiddenAmount}</span>
-                &quot; /&gt;
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] font-mono text-gray-400">Value:</span>
-                <input 
-                  type="text"
-                  className="w-20 bg-amber-50/50 border border-amber-200 rounded px-1.5 py-0.5 text-xs text-slate-800 font-bold font-mono focus:outline-none"
-                  value={hiddenAmount}
-                  onChange={(e) => handlePriceTamper(e.target.value)}
-                />
-              </div>
-            </div>
-            {isTampered && (
-              <div className="flex items-center gap-1.5 text-amber-600 font-mono text-[10px] font-bold">
-                <AlertTriangle size={12} />
-                <span>Payload Active: Price tampered from ${originalPrice.toFixed(2)} to ${parseFloat(hiddenAmount) ? parseFloat(hiddenAmount).toFixed(2) : '0.00'}!</span>
-              </div>
-            )}
           </div>
 
           {/* Payment Method Selector */}
@@ -248,7 +206,7 @@ export const CheckoutWizard: React.FC<CheckoutWizardProps> = ({
             </div>
             <div className="text-right">
               <span className="text-[10px] text-gray-400 font-mono font-bold block text-right">TOTAL CHARGE</span>
-              <span className="text-sm font-black text-indigo-600">${parseFloat(hiddenAmount) ? parseFloat(hiddenAmount).toFixed(2) : '0.00'}</span>
+              <span className="text-sm font-black text-indigo-600">${originalPrice.toFixed(2)}</span>
             </div>
           </div>
 
@@ -313,7 +271,7 @@ export const CheckoutWizard: React.FC<CheckoutWizardProps> = ({
                     type="password" 
                     maxLength={6}
                     placeholder="e.g. 123456"
-                    className="w-full border border-gray-250 p-2 rounded-lg text-xs tracking-widest font-mono font-bold"
+                    className="w-full border border-gray-255 p-2 rounded-lg text-xs tracking-widest font-mono font-bold"
                     value={ewalletPin}
                     onChange={(e) => setEwalletPin(e.target.value)}
                   />
@@ -373,7 +331,7 @@ export const CheckoutWizard: React.FC<CheckoutWizardProps> = ({
 
           <div className="bg-slate-100 p-3 rounded-lg flex items-center gap-2 text-slate-650 text-[11px] font-mono leading-relaxed">
             <Lock size={12} className="text-indigo-600 shrink-0" />
-            <span>Encrypted Checkout: Details submitted remain on local test memory.</span>
+            <span>Encrypted Checkout: Details submitted remain on local memory.</span>
           </div>
 
           {/* Bottom actions */}
@@ -405,29 +363,9 @@ export const CheckoutWizard: React.FC<CheckoutWizardProps> = ({
           <div className="space-y-2">
             <h3 className="text-md font-extrabold text-slate-800">Enrollment Transaction Approved</h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-              Your mock payment card or bank voucher was accepted! Your student profile is officially enrolled in the syllabus.
+              Your payment was accepted! Your student profile is officially enrolled in the syllabus.
             </p>
           </div>
-
-          {/* Special Penetration Lab Notification if they tampered */}
-          {isTampered ? (
-            <div className="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl max-w-md mx-auto space-y-2.5 text-left">
-              <div className="flex items-center gap-2">
-                <ShieldAlert className="text-rose-600 shrink-0" size={18} />
-                <span className="text-xs font-bold uppercase tracking-wider">CRITICAL ATTEMPT SUCCESSFUL</span>
-              </div>
-              <p className="text-[11px] leading-relaxed text-rose-700">
-                <strong>Price Parameter Tampering:</strong> You submitted a payment amount of **${parseFloat(hiddenAmount) ? parseFloat(hiddenAmount).toFixed(2) : '0.00'}** through the hidden field, instead of the original **$149.00**. The server had zero schema verification and processed the request successfully!
-              </p>
-              <div className="text-[10px] font-mono text-rose-600 bg-rose-100/50 p-2 rounded">
-                Server ledger state: Amount Paid = ${hiddenAmount}
-              </div>
-            </div>
-          ) : (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl max-w-md mx-auto space-y-1.5 text-left text-xs leading-relaxed">
-              <strong>Secure Standard Transaction:</strong> You paid the default total of <strong>$149.00</strong>. No price modification was detected in the client payload session.
-            </div>
-          )}
 
           <div className="bg-white border rounded-xl p-4 text-left max-w-md mx-auto space-y-2 text-xs divide-y divide-gray-100">
             <div className="flex justify-between pb-1.5 font-bold">
@@ -446,7 +384,7 @@ export const CheckoutWizard: React.FC<CheckoutWizardProps> = ({
             </div>
             <div className="flex justify-between pt-1.5 font-black text-sm">
               <span className="text-indigo-650">Settled Amount:</span>
-              <span className="text-slate-900">${parseFloat(hiddenAmount) ? parseFloat(hiddenAmount).toFixed(2) : '0.00'}</span>
+              <span className="text-slate-900">${tamperedAmount.toFixed(2)}</span>
             </div>
           </div>
 

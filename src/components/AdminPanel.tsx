@@ -1,9 +1,9 @@
-import React from 'react';
-import { Users, BookOpen, CreditCard, ShieldAlert, BadgeInfo, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, BookOpen, CreditCard, ShieldAlert, ArrowRight } from 'lucide-react';
 import { PaymentReceipt, UserProfile } from '../types';
 
 interface AdminPanelProps {
-  receipts: PaymentReceipt[];
+  currentUserId: number;
   users: Record<string, UserProfile>;
   coursesCount: number;
   onViewReceipt: (id: number) => void;
@@ -11,21 +11,52 @@ interface AdminPanelProps {
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({
-  receipts,
+  currentUserId,
   users,
   coursesCount,
   onViewReceipt,
   mode,
 }) => {
-  // Stats calculate
+  const [receipts, setReceipts] = useState<PaymentReceipt[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetch('http://localhost:3000/api/admin/receipts', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': currentUserId.toString()
+      }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+        return res.json();
+      })
+      .then((data: PaymentReceipt[]) => {
+        if (Array.isArray(data)) setReceipts(data);
+      })
+      .catch(err => console.error('Failed to fetch admin ledger:', err))
+      .finally(() => setIsLoading(false));
+  }, [currentUserId]);
+
   const totalUsersInDb = Object.keys(users).length;
   const totalEnrollments = receipts.length;
-  const totalRevenue = receipts.reduce((sum, r) => sum + (r.status === 'Paid' ? r.amount : 0), 0);
+
+  const totalRevenue = receipts.reduce((sum, r) => sum + (r.status === 'Paid' ? Number(r.amount) : 0), 0);
+
+  if (isLoading) {
+    return (
+      <div className="py-20 text-center">
+        <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4" />
+        <p className="text-gray-500 font-bold font-mono">Synchronizing Global Ledger...</p>
+      </div>
+    );
+  }
 
   if (mode === 'dashboard') {
     return (
       <div id="admin-dashboard-container" className="py-8 max-w-7xl mx-auto px-4 space-y-8">
-        {/* Title */}
         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 pb-4">
           <div>
             <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">System Performance & Metrics Dashboard</h2>
@@ -39,10 +70,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
         </div>
 
-        {/* Metrics Blocks */}
         <div id="admin-stats-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="p-3 bg-indigo-55 text-indigo-600 rounded-xl">
+            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
               <Users size={20} />
             </div>
             <div>
@@ -85,7 +115,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     );
   }
 
-  // GLOBAL BILLING LEDGER VIEW
   return (
     <div id="admin-ledger-container" className="py-8 max-w-7xl mx-auto px-4 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 pb-4">
@@ -119,7 +148,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <td className="py-3 px-2 max-w-xs truncate font-sans text-slate-700" title={rec.courseTitle}>
                     {rec.courseTitle}
                   </td>
-                  <td className="py-3 px-2 font-bold text-slate-900">${rec.amount.toFixed(2)}</td>
+                  
+                  {/* CRITICAL FIX: Cast rec.amount to Number before formatting */}
+                  <td className="py-3 px-2 font-bold text-slate-900">${Number(rec.amount).toFixed(2)}</td>
+                  
                   <td className="py-3 px-2 font-sans">
                     <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full ${
                       rec.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'

@@ -10,7 +10,8 @@ export function Login({ onLoginSuccess }: LoginProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState(''); 
-  const [role, setRole] = useState('student'); // Added Role State
+  const [dob, setDob] = useState(''); // New Date of Birth State
+  const [role, setRole] = useState('student'); 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -22,27 +23,31 @@ export function Login({ onLoginSuccess }: LoginProps) {
     const endpoint = isLoginMode ? '/api/login' : '/api/register';
     const payload = isLoginMode 
       ? { username, password } 
-      : { username, email, password, role }; 
+      : { username, email, password, role, dob }; 
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(`http://localhost:3000${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(isLoginMode ? 'Invalid username or password.' : 'Registration failed. Email may already be registered.');
+        throw new Error(isLoginMode ? 'Invalid username or password.' : 'Registration failed. Username or Email may already be taken.');
       }
 
       const dbUser = await response.json();
       
-      // CRITICAL FIX: Map the database row to the React interface to prevent crashes
       const normalizedUser: UserProfile = {
-        ...dbUser,
-        name: dbUser.email, // Map DB email to UI name
-        avatar: `https://ui-avatars.com/api/?name=${dbUser.email}&background=random`, // Generate an avatar
-        enrolledCourses: dbUser.enrolledCourses || [] // Prevent array crash
+        id: dbUser.id,
+        username: dbUser.username,
+        email: dbUser.email,
+        role: dbUser.role,
+        dob: dbUser.dob,
+        bio: dbUser.bio,
+        status: dbUser.status || 'active',
+        name: dbUser.username, // Ensure name is populated
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(dbUser.username)}&background=random`
       };
 
       onLoginSuccess(normalizedUser);
@@ -53,18 +58,6 @@ export function Login({ onLoginSuccess }: LoginProps) {
       setIsLoading(false);
     }
   };
-
-/*
-    // --- TEMPORARY FRONTEND VERIFICATION BYPASS ---
-    // Remove this entire block once Member 2's API is online!
-    if (password === 'test') {
-      setIsLoading(false);
-      if (username.includes('admin')) return onLoginSuccess(USERS.admin);
-      if (username.includes('helen')) return onLoginSuccess(USERS.educator);
-      return onLoginSuccess(USERS.student);
-    }
-    // ----------------------------------------------
-*/
   
   return (
     <div className="min-h-[75vh] flex items-center justify-center p-4">
@@ -89,14 +82,14 @@ export function Login({ onLoginSuccess }: LoginProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Username {isLoginMode && "or Email"}</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Username</label>
             <input 
               type="text" 
               required
               className="w-full bg-slate-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. alice smith"
+              placeholder="e.g. alicesmith"
             />
           </div>
 
@@ -113,6 +106,18 @@ export function Login({ onLoginSuccess }: LoginProps) {
                   placeholder="alice@example.com"
                 />
               </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Date of Birth</label>
+                <input 
+                  type="date" 
+                  required
+                  className="w-full bg-slate-50 border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                />
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Account Type</label>
                 <select 
