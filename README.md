@@ -125,17 +125,16 @@ You can execution the following npm commands inside the root directory directory
 
 ## 🐳 Docker Deployment (Instructor Redeployment)
 
-This section describes the containerised deployment used to fully redeploy the platform for lab assessment. All platform components run as Docker services on a single shared bridge network.
+This section describes the containerised database redeployment for lab assessment. The platform uses a local development workflow for the frontend and backend, while the data layer is containerised via Docker Compose.
 
 ### Architecture
 
 | Service | Container name | Host port | Internal DNS | Role |
 |---------|---------------|-----------|--------------|------|
-| Frontend (React/Vite) | EduUnity_frontend | 5173 | `frontend` | Web UI |
-| Backend (Node/Express) | EduUnity_backend | 3000 | `backend` | API server |
 | Database (MySQL) | MyEduConnect_db | 3306 | `db` | Data store |
+| Adminer | MyEduConnect_db_admin | 8080 | `adminer` | Database management UI |
 
-Services communicate over the custom bridge network `platform-net`. Service discovery is handled by Docker DNS using the service names above.
+Services communicate over the default bridge network. The backend connects to the database using the service name `db`.
 
 ### Prerequisites
 
@@ -145,28 +144,35 @@ Services communicate over the custom bridge network `platform-net`. Service disc
 ### Deploy
 
 ```bash
-docker compose -f deploy/docker-compose.yml up -d --build
+docker compose up -d
 ```
 
 Verify services:
 
 ```bash
-docker compose -f deploy/docker-compose.yml ps
-docker compose -f deploy/docker-compose.yml exec backend getent hosts db
+docker compose ps
 ```
 
-Expected: `backend` resolves `db` to the database container IP on `platform-net`.
+Expected output shows `MyEduConnect_db` running with port `3306` mapped, and `MyEduConnect_db_admin` with port `8080` mapped.
 
 Access points:
 
-- Frontend UI: `http://localhost:5173`
-- Backend API: `http://localhost:3000`
+- Database Adminer UI: `http://localhost:8080`
 - Database: `localhost:3306` (MySQL root / `rootpassword`)
+
+### Redeploy / Reset
+
+To tear down and recreate the containers:
+
+```bash
+docker compose down
+docker compose up -d --build
+```
 
 ### Known Lab Vulnerabilities
 
 The following network-layer weaknesses are intentionally present for controlled lab exercises only. Do not use this configuration outside the approved environment.
 
-- Cleartext HTTP: Frontend talks to backend over plain HTTP (`http://backend:3000`). No TLS is configured.
-- Unencrypted database connection: Backend connects to MySQL over plain TCP. No TLS is configured between `backend` and `db`.
+- Cleartext HTTP: Frontend talks to backend over plain HTTP. No TLS is configured.
+- Unencrypted database connection: Backend connects to MySQL over plain TCP. No TLS is configured between the backend host and `db`.
 
