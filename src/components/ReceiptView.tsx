@@ -14,7 +14,7 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ receiptId, currentUser
 
   useEffect(() => {
     setIsLoading(true);
-    fetch(`http://localhost:3000/api/receipts/${receiptId}`, {
+    fetch(`http://192.168.56.1:3000/api/receipts/${receiptId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

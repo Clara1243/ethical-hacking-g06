@@ -21,7 +21,7 @@ export const EnrolledCourses: React.FC<EnrolledCoursesProps> = ({ studentId, onV
     setIsLoading(true);
     setError(null);
 
-    fetch(`http://localhost:3000/api/users/${studentId}/courses`, {
+    fetch(`http://192.168.56.1:3000/api/users/${studentId}/courses`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
