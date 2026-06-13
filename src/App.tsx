@@ -99,6 +99,27 @@ function useNavItems(
 // Component
 // ─────────────────────────────────────────────
 
+if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+  const originalFetch = window.fetch;
+  window.fetch = function (input, init) {
+    let modifiedInput = input;
+    
+    if (typeof input === 'string') {
+      if (input.includes('http://localhost:3000')) {
+        modifiedInput = input.replace('http://localhost:3000', `http://${window.location.hostname}:3000`);
+      } else if (input.startsWith('/api')) {
+        modifiedInput = `http://${window.location.hostname}:3000${input}`;
+      }
+    } else if (input instanceof URL) {
+      if (input.href.includes('http://localhost:3000')) {
+        modifiedInput = new URL(input.href.replace('http://localhost:3000', `http://${window.location.hostname}:3000`));
+      }
+    }
+    
+    return originalFetch.call(this, modifiedInput, init);
+  };
+}
+
 export default function App() {
   // ── State ──────────────────────────────────
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);

@@ -5,11 +5,15 @@ const cors = require('cors');
 
 const app = express();
 
-// FIXED: Explicitly allow the custom 'X-User-Id' header to prevent browser CORS blocks during your IDOR testing
+// Accepts requests from anywhere. No cookie restrictions.
+// app.use(cors()); 
+
 app.use(cors({
-  origin: '*',
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'Accept']
-})); 
+  origin: '*', // enable any devices include mobile
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'x-user-id'], 
+  credentials: true
+}));
 
 app.use(express.json());
 
