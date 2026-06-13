@@ -11,7 +11,7 @@ const app = express();
 app.use(cors({
   origin: '*', // enable any devices include mobile
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'x-user-id'], // 🌟 关键：强行放行这个头部！
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'x-user-id'], 
   credentials: true
 }));
 
