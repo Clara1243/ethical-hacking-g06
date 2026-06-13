@@ -38,7 +38,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
     if (!course.id) return;
 
     // Fetch Materials (Corrected URL)
-    fetch(`http://192.168.56.1:3000/api/courses/${course.id}/materials`, {
+    fetch(`/api/courses/${course.id}/materials`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
       .catch(err => console.error('Failed to fetch materials:', err));
 
     // Fetch Feedback (Corrected URL)
-    fetch(`http://192.168.56.1:3000/api/courses/${course.id}/feedback`, {
+    fetch(`/api/courses/${course.id}/feedback`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
 
     // Fetch Students
     if (isEducator) {
-      fetch(`http://192.168.56.1:3000/api/courses/${course.id}/students`, {
+      fetch(`/api/courses/${course.id}/students`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -88,7 +88,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
   // LOCAL POST FUNCTION FOR XSS EXPLOIT
   const handlePostReview = async (content: string, rating: number) => {
     try {
-      const response = await fetch(`http://192.168.56.1:3000/api/courses/${course.id}/feedback`, {
+      const response = await fetch(`/api/courses/${course.id}/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

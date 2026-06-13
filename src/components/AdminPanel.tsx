@@ -22,7 +22,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   useEffect(() => {
     setIsLoading(true);
-    fetch('http://192.168.56.1:3000/api/admin/receipts', {
+    fetch('/api/admin/receipts', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

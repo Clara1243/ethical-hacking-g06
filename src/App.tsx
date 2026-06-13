@@ -137,12 +137,12 @@ export default function App() {
   // ── Data fetching ──────────────────────────
   // Courses + users — fetched once on mount
   useEffect(() => {
-    fetch('http://192.168.56.1:3000/api/courses')
+    fetch('/api/courses')
       .then(res => res.json())
       .then((data: Course[]) => setCourses(data))
       .catch(err => console.error('Failed to fetch courses:', err));
 
-    fetch('http://192.168.56.1:3000/api/users')
+    fetch('/api/users')
       .then(res => res.json())
       .then((data: UserProfile[]) => {
         const userMap = data.reduce<Record<string, UserProfile>>((acc, u) => {
@@ -157,7 +157,7 @@ export default function App() {
   // Enrolled course IDs
   useEffect(() => {
     if (currentUser?.role === 'student') {
-      fetch(`http://192.168.56.1:3000/api/users/${currentUser.id}/courses`, { 
+      fetch(`/api/users/${currentUser.id}/courses`, { 
         headers: {
           'X-User-Id': currentUser.id.toString()
         }
