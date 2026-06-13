@@ -24,7 +24,7 @@ export const StudentGrades: React.FC<StudentGradesProps> = ({ studentId }) => {
     setError(null);
 
     // FIXED: Added absolute URL and X-User-Id Header to satisfy requireOwnership middleware
-    fetch(`http://localhost:3000/api/users/${studentId}/grades`, {
+    fetch(`http://192.168.56.1:3000/api/users/${studentId}/grades`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

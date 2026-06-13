@@ -18,9 +18,8 @@ app.use(cors({
 app.use(express.json());
 
 // ─────────────────────────────────────────────
-// Mock Auth Middleware
+// Mock Auth Middleware (Vulnerable IDOR intact)
 // ─────────────────────────────────────────────
-// Looks for the 'X-User-Id' header sent by the frontend React app
 app.use((req, res, next) => {
   const userId = req.headers['x-user-id'];
   if (userId) {
@@ -58,9 +57,14 @@ const requireOwnership = (getResourceUserId) =>
     const callerId = req.authenticatedUserId; 
     if (!callerId) return sendError(res, 401, 'Not authenticated');
 
+    // The middleware queries the database for the specific receipt owner
     const resourceUserId = await getResourceUserId(req);
     if (resourceUserId === null) return sendError(res, 404, 'Not found');
-    if (String(resourceUserId) !== String(callerId)) return sendError(res, 403, 'Forbidden');
+
+    // INTENTIONAL FLAW: It fails to securely validate if the fetched owner matches the caller.
+    // By commenting out or removing the comparison logic below, any authenticated user passes the check.
+    
+    // if (String(resourceUserId) !== String(callerId)) return sendError(res, 403, 'Forbidden');
 
     next();
   });
@@ -253,6 +257,39 @@ app.get('/api/courses/:id/students', asyncHandler(async (req, res) => {
   res.json(rows);
 }));
 
+// INTENTIONAL VULNERABILITY: Stored XSS
+// This endpoint accepts raw HTML/JavaScript payloads and stores them directly into the database without sanitization.
+app.post('/api/courses/:id/feedback', asyncHandler(async (req, res) => {
+  const courseId = req.params.id;
+  const { content, rating } = req.body;
+  
+  // Utilizing the existing IDOR-vulnerable middleware for user identification
+  const userId = req.authenticatedUserId; 
+
+  if (!userId) return sendError(res, 401, 'Not authenticated. Missing X-User-Id header.');
+  if (!content || !rating) return sendError(res, 400, 'Content and rating are required');
+
+  // The Vulnerability: Inserting the raw 'content' payload directly into the database.
+  // In a secure application, 'content' would be stripped of HTML tags here, or sanitized on the frontend before rendering.
+  await pool.execute(
+    `INSERT INTO course_feedback (course_id, user_id, content, rating, date_time)
+     VALUES (?, ?, ?, ?, NOW())`,
+    [courseId, userId, content, rating]
+  );
+
+  // Retrieve the newly created record to return it to the frontend state
+  const [newFeedback] = await pool.execute(
+    `SELECT f.*, u.username AS author
+     FROM course_feedback f
+     JOIN users u ON f.user_id = u.id
+     WHERE f.course_id = ? AND f.user_id = ?
+     ORDER BY f.date_time DESC LIMIT 1`,
+    [courseId, userId]
+  );
+
+  res.status(201).json(newFeedback[0]);
+}));
+
 // ─────────────────────────────────────────────
 // Admin routes
 // ─────────────────────────────────────────────
@@ -293,4 +330,6 @@ app.use((err, _req, res, _next) => {
 // Start
 // ─────────────────────────────────────────────
 
-app.listen(3000, () => console.log('API running on http://localhost:3000'));
+app.listen(3000, '0.0.0.0', () => {
+  console.log('API running on port 3000 (Accessible from Kali VM)');
+});

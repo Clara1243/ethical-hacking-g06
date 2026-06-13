@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { MessageSquare, Stars } from 'lucide-react';
-import { Review } from '../types';
+import { CourseFeedback } from '../types';
 
 interface ReviewSectionProps {
-  reviews: Review[];
+  reviews: CourseFeedback[];
   onAddReview: (content: string, rating: number) => void;
 }
 
