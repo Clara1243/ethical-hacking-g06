@@ -26,7 +26,7 @@ export function Login({ onLoginSuccess }: LoginProps) {
       : { username, email, password, role, dob }; 
 
     try {
-      const response = await fetch(`http://192.168.56.1:3000${endpoint}`, {
+      const response = await fetch(`${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
