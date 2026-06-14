@@ -34,6 +34,8 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
   const [activeStudents, setActiveStudents] = useState<ActiveStudent[]>([]);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
 
+  const token = localStorage.getItem('token');
+
   useEffect(() => {
     if (!course.id) return;
 
@@ -42,7 +44,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'X-User-Id': authenticatedUserId.toString()
+        'Authorization': `Bearer ${token}`
       }
     })
       .then(res => {
@@ -57,7 +59,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'X-User-Id': authenticatedUserId.toString()
+        'Authorization': `Bearer ${token}`
       }
     })
       .then(res => {
@@ -69,11 +71,12 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
 
     // Fetch Students
     if (isEducator) {
+      
       fetch(`/api/courses/${course.id}/students`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': authenticatedUserId.toString()
+          'Authorization': `Bearer ${token}`
         }
       })
         .then(res => {
@@ -92,8 +95,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Utilizing the existing IDOR-vulnerable variable
-          'X-User-Id': authenticatedUserId.toString() 
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ content, rating }),
       });

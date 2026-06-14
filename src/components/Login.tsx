@@ -36,7 +36,13 @@ export function Login({ onLoginSuccess }: LoginProps) {
         throw new Error(isLoginMode ? 'Invalid username or password.' : 'Registration failed. Username or Email may already be taken.');
       }
 
-      const dbUser = await response.json();
+      const responseData = await response.json();
+      
+      if (responseData.token) {
+        localStorage.setItem('token', responseData.token);
+      }
+
+      const dbUser = responseData.user || responseData;
       
       const normalizedUser: UserProfile = {
         id: dbUser.id,
@@ -46,7 +52,8 @@ export function Login({ onLoginSuccess }: LoginProps) {
         dob: dbUser.dob,
         bio: dbUser.bio,
         status: dbUser.status || 'active',
-        name: dbUser.username, // Ensure name is populated
+        name: dbUser.username, 
+        // We now safely parse the username from the correct object layer
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(dbUser.username)}&background=random`
       };
 
