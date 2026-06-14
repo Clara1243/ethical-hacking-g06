@@ -111,10 +111,10 @@ Following these steps to stage and verify the mobile environment:
 ### Step 1: Pre-compile & Run Frontend Assets
 Ensure that the Docker containers and Node.js backend server are fully active as described in Phase 3 & 4. Then, compile the production assets and initialize the PWA staging environment:
 
-``bash
+```bash
 npm run build
-npm run 
-``
+npm run dev
+```
 
 ### Step 2: Temporary Network Firewall Configuration
 To permit external physical devices (mobile phones) to connect to your desktop's host server over the local network range, you must bypass local inbound blockades:
@@ -127,9 +127,9 @@ To permit external physical devices (mobile phones) to connect to your desktop's
 Retrieve your machine's unique interface address allocated by your router or personal mobile hotspot:
 1. Open a standard terminal or Command Prompt (cmd).
 2. Execute the network diagnostic tool:
-``bash
+```bash
 ipconfig
-``
+```
 3. Locate active adapter (e.g., Wireless LAN adapter WLAN) and note down the IPv4 Address (e.g., 192.168.100.xx).
 
 ### Step 4: Secure Context Bypass on Mobile browsers
@@ -138,13 +138,13 @@ Due to the testing range operates over non-encrypted cleartext HTTP corridors, m
 ## For Android / iOS Google Chrome Users:
 1. Launch the **Google Chrome** app on your mobile device (connected to the same Wi-Fi/hotspot network).
 2. Input the following structural diagnostic URL into the address shell and hit Enter:
-``bash
+```bash
 chrome://flags
-``
+```
 3. In the flag search index, lookup: 
-``bash
+```bash
 #unsafely-treat-insecure-origin-as-secure
-``
+```
 4. Switch the state configuration to **Enabled**.
 5. Input your desktop's full server address into the white-list textbook interface: http://192.168.100.xx:3000 (Replace with the IP found in Step 3).
 6. Tap the **Relaunch / Restart** button at the base of the screen to hard-reboot the Chrome application kernel.
@@ -152,13 +152,13 @@ chrome://flags
 ## For Micosoft Edge Users:
 1. Launch the **Microsoft Edge** application on your smartphone.
 2. Access the secure overrides via:
-``bash
+```bash
 edge://flags
-``
+```
 3. Locate 
-``bash
+```bash
 #unsafely-treat-insecure-origin-as-secure
-``
+```
 and flip to Enabled, append your exact host LAN address context (http://192.168.100.xx:3000), and relaunch the software browser.
 
 ### Step 5: Native application installation (PWA)
