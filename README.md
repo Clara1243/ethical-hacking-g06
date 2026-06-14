@@ -102,6 +102,72 @@ Ensure your host machine has the following tools installed:
 
 **NOTE:** *If the Course Catalog loads successfully, the environment is fully staged for vulnerability testing.*
 
+## Mobile Companion App Guide (PWA)
+
+This project features an integrated Progressive Web Application (PWA) framework allowing users to access and install the educational platform on physical mobile devices over the local area network (LAN).
+
+Following these steps to stage and verify the mobile environment:
+
+### Step 1: Pre-compile & Run Frontend Assets
+Ensure that the Docker containers and Node.js backend server are fully active as described in Phase 3 & 4. Then, compile the production assets and initialize the PWA staging environment:
+
+``bash
+npm run build
+npm run 
+``
+
+### Step 2: Temporary Network Firewall Configuration
+To permit external physical devices (mobile phones) to connect to your desktop's host server over the local network range, you must bypass local inbound blockades:
+
+1. Press " Win + S " on your host dekstop, type "Windows Defender Firewall", and select it.
+2. In the left-hand settings panel, select "Turn Windows Defender Firewall on or off".
+3. Temporarily turn off the firewall for both Private and Public network locations to allow local ingress routing. (Remember to reactivate after labs).
+
+### Step 3: Identify Host Local Gateway IP
+Retrieve your machine's unique interface address allocated by your router or personal mobile hotspot:
+1. Open a standard terminal or Command Prompt (cmd).
+2. Execute the network diagnostic tool:
+``bash
+ipconfig
+``
+3. Locate active adapter (e.g., Wireless LAN adapter WLAN) and note down the IPv4 Address (e.g., 192.168.100.xx).
+
+### Step 4: Secure Context Bypass on Mobile browsers
+Due to the testing range operates over non-encrypted cleartext HTTP corridors, modern mobile web layouts will aggressively strip PWA permissions unless explicitly white-listed under a simulated secure origin context.
+
+## For Android / iOS Google Chrome Users:
+1. Launch the **Google Chrome** app on your mobile device (connected to the same Wi-Fi/hotspot network).
+2. Input the following structural diagnostic URL into the address shell and hit Enter:
+``bash
+chrome://flags
+``
+3. In the flag search index, lookup: 
+``bash
+#unsafely-treat-insecure-origin-as-secure
+``
+4. Switch the state configuration to **Enabled**.
+5. Input your desktop's full server address into the white-list textbook interface: http://192.168.100.xx:3000 (Replace with the IP found in Step 3).
+6. Tap the **Relaunch / Restart** button at the base of the screen to hard-reboot the Chrome application kernel.
+
+## For Micosoft Edge Users:
+1. Launch the **Microsoft Edge** application on your smartphone.
+2. Access the secure overrides via:
+``bash
+edge://flags
+``
+3. Locate 
+``bash
+#unsafely-treat-insecure-origin-as-secure
+``
+and flip to Enabled, append your exact host LAN address context (http://192.168.100.xx:3000), and relaunch the software browser.
+
+### Step 5: Native application installation (PWA)
+1. Navigate directly to your local infrastructure link on your phone browser: http://192.168.100.xx:3000.
+2. Tap the browser options icon (the Triple Dots Menu at the top or bottom panel bounds).
+3. Select the option "Add to Home Screen" or "Install App".
+4. The system will cleanly drop a native desktop application icon onto your smartphone's layout, allowing full sandbox interaction detached from traditional address bars.
+
+
 ## 2. Recommended VS Code Extensions
 For the best styling auto-completions, syntax highlights, and developer feedback, we suggest installing the following extensions from the VS Code Marketplace:
 * **Tailwind CSS IntelliSense** (by Tailwind Labs) — Essential for class name autocomplete, previewing colors, and structural hover cards since the project is fully styled with Tailwind utility classes.
