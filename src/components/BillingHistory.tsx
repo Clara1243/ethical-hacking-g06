@@ -17,7 +17,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({ userId, userEmai
     setIsLoading(true);
     setError(null);
 
-    fetch(`http://localhost:3000/api/receipts?userId=${userId}`, {
+    fetch(`/api/receipts?userId=${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

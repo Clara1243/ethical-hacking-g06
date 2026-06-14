@@ -43,8 +43,8 @@ export default defineConfig(() => {
       },
     },
     server: {
-      port: 3000,         
-      host: true,          // allow domain and hotspot
+      port: 5173,         
+      host: true,          
       allowedHosts: 'all', 
 
       proxy: {
@@ -53,7 +53,12 @@ export default defineConfig(() => {
           changeOrigin: true,
         }
       },
-      hmr: process.env.DISABLE_HMR !== 'true',
+      // FIX: Explicitly tell the HMR WebSocket to use the exact IP you are connecting through, 
+      // rather than letting it try to auto-detect and fail.
+      hmr: {
+        host: '100.105.41.72',
+        protocol: 'ws'
+      },
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
   };

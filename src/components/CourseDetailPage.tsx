@@ -38,7 +38,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
     if (!course.id) return;
 
     // Fetch Materials (Corrected URL)
-    fetch(`http://localhost:3000/api/courses/${course.id}/materials`, {
+    fetch(`/api/courses/${course.id}/materials`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
       .catch(err => console.error('Failed to fetch materials:', err));
 
     // Fetch Feedback (Corrected URL)
-    fetch(`http://localhost:3000/api/courses/${course.id}/feedback`, {
+    fetch(`/api/courses/${course.id}/feedback`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
 
     // Fetch Students
     if (isEducator) {
-      fetch(`http://localhost:3000/api/courses/${course.id}/students`, {
+      fetch(`/api/courses/${course.id}/students`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -84,6 +84,35 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
         .catch(err => console.error('Failed to fetch students:', err));
     }
   }, [course.id, isEducator, authenticatedUserId]);
+
+  // LOCAL POST FUNCTION FOR XSS EXPLOIT
+  const handlePostReview = async (content: string, rating: number) => {
+    try {
+      const response = await fetch(`/api/courses/${course.id}/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Utilizing the existing IDOR-vulnerable variable
+          'X-User-Id': authenticatedUserId.toString() 
+        },
+        body: JSON.stringify({ content, rating }),
+      });
+
+      if (!response.ok) {
+        console.error(`HTTP error! status: ${response.status}`);
+        return;
+      }
+
+      const newFeedback = await response.json();
+      
+      // CRITICAL FOR XSS: Instantly update the local React state.
+      // This forces the dangerouslySetInnerHTML in ReviewSection to render the raw payload.
+      setFeedbacks((prevFeedbacks) => [newFeedback, ...prevFeedbacks]);
+
+    } catch (error) {
+      console.error('Failed to post feedback:', error);
+    }
+  };
 
   // VULNERABLE FILE UPLOAD LOGIC (Unrestricted file type & path execution logic)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,7 +221,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
             )}
           </div>
           
-          <ReviewSection reviews={feedbacks} onAddReview={onAddReview} />
+          <ReviewSection reviews={feedbacks} onAddReview={handlePostReview} />
         </div>
       ) : null}
 
