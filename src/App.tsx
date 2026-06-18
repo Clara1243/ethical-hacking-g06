@@ -12,7 +12,7 @@ import { ReceiptView } from './components/ReceiptView';
 import { UserManagement } from './components/UserManagement';
 import { StudentGrades } from './components/StudentGrades';
 import { EnrolledCourses } from './components/EnrolledCourses';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Menu, X } from 'lucide-react';
 
 // Provide a minimal JSX IntrinsicElements declaration for environments
 // where the global JSX namespace is not present to avoid TS7026 errors.
@@ -133,6 +133,7 @@ export default function App() {
   const [profileEmail, setProfileEmail] = useState<string | null>(null);
   const [adminSubTab, setAdminSubTab] = useState<AdminSubTab>('dashboard');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // ── Data fetching ──────────────────────────
   // Courses + users — fetched once on mount
@@ -294,7 +295,7 @@ export default function App() {
       className="min-h-screen bg-slate-50 flex flex-col font-sans text-gray-800 antialiased selection:bg-indigo-500 selection:text-white"
     >
       <header className="bg-white border-b border-gray-150 sticky top-0 z-40 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 min-h-16 flex items-center justify-between gap-4 py-2">
 
           <div
             onClick={() => {
@@ -303,6 +304,7 @@ export default function App() {
               pushEmailUrl(null);
               if (currentUser?.role === 'admin') { setActiveTab('admin'); setAdminSubTab('dashboard'); }
               else { setActiveTab('courses'); }
+              setShowMobileMenu(false);
             }}
             className="flex items-center gap-2 cursor-pointer group shrink-0"
           >
@@ -329,34 +331,62 @@ export default function App() {
 
           <div className="relative shrink-0 flex items-center gap-2">
             {currentUser && (
-              <div className="relative">
-                <button
-                  onClick={() => setShowProfileMenu(v => !v)}
-                  className="flex items-center gap-1.5 p-1.5 hover:bg-slate-50 border border-transparent hover:border-gray-150 rounded-xl transition-all cursor-pointer"
-                >
-                  <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs border border-indigo-200">
-                    {currentUser.username.substring(0, 2).toUpperCase()}
-                  </div>
-                  <ChevronDown size={14} className="text-gray-500" />
-                </button>
-                {showProfileMenu && (
-                  <div className="absolute right-0 top-11 z-50 bg-white border border-gray-250 rounded-xl shadow-lg w-48 p-2">
-                    <div className="px-3 py-2 border-b border-gray-100 mb-1">
-                      <span className="text-sm font-bold text-slate-800 block truncate">{currentUser.username}</span>
+              <>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowProfileMenu(v => !v)}
+                    className="flex items-center gap-1.5 p-1.5 hover:bg-slate-50 border border-transparent hover:border-gray-150 rounded-xl transition-all cursor-pointer"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs border border-indigo-200">
+                      {currentUser.username.substring(0, 2).toUpperCase()}
                     </div>
-                    <button
-                      onClick={() => { setShowProfileMenu(false); handleLogout(); }}
-                      className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-              </div>
+                    <ChevronDown size={14} className="text-gray-500" />
+                  </button>
+                  {showProfileMenu && (
+                    <div className="absolute right-0 top-11 z-50 bg-white border border-gray-250 rounded-xl shadow-lg w-48 p-2">
+                      <div className="px-3 py-2 border-b border-gray-100 mb-1">
+                        <span className="text-sm font-bold text-slate-800 block truncate">{currentUser.username}</span>
+                      </div>
+                      <button
+                        onClick={() => { setShowProfileMenu(false); setShowMobileMenu(false); handleLogout(); }}
+                        className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setShowMobileMenu(v => !v)}
+                  className="p-2 text-gray-500 hover:bg-slate-50 hover:text-slate-850 rounded-xl md:hidden cursor-pointer flex items-center justify-center"
+                  >
+                    {showMobileMenu ? <X size={18} /> : <Menu size={18} />}
+                </button>
+              </>
             )}
           </div>
 
         </div>
+
+        {currentUser && showMobileMenu && (
+          <div className="md:hidden bg-white border-t border-gray-150 px-4 py-2.5 flex flex-col gap-1 shadow-inner animate-in fade-in slide-in-from-top-1 duration-200">
+            {navItems.map(item => (
+              <button
+                key={item.label}
+                onClick={() => {
+                  item.onClick();
+                  setShowMobileMenu(false); 
+                }}
+                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                  item.isActive ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:bg-slate-50'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       <main className="flex-1">

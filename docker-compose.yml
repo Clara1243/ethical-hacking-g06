@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   db:
-    image: mysql:8.0.20 # OS MISCONFIGURATION: OUTDATED SERVER PACKAGES & KERNEL VERSION
+    image: mysql:8.0
     container_name: MyEduConnect_db
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -12,7 +12,7 @@ services:
       - "3306:3306"
     volumes:
       # This points to the init.sql we drafted earlier to build your vulnerable tables
-    - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
   
   adminer:  # <--- This must be aligned with 'db:'
     image: adminer
@@ -21,3 +21,18 @@ services:
     ports:
       # SERVER MISCONFIGURATION: EXPOSED ADMIN SERVICE WITH WEAK CREDENTIALS (the rootpassword)
       - "8080:8080"
+
+  vulnerable_host:
+    image: rastasheep/ubuntu-sshd:18.04
+    container_name: MyEduConnect_vulnerable_host
+    ports:
+      - "2222:22"
+    # SERVER MISCONFIGURATION: weak SSH credentials
+    # OS MISCONFIGURATION: SUID Binary Misconfiguration (For Privilege Escalation)
+    entrypoint: >
+      sh -c "
+      useradd -m -s /bin/bash lowuser &&
+      echo 'lowuser:password123' | chpasswd &&
+      chmod u+s /usr/bin/find &&  
+      exec /usr/sbin/sshd -D
+      "
