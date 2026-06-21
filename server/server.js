@@ -5,8 +5,11 @@ const cors = require('cors');
 
 const app = express();
 
-// Accepts requests from anywhere. No cookie restrictions.
-// app.use(cors()); 
+const xss = require('xss'); // For sanitizing user input to prevent XSS
+
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = 'your_super_secure_secret_key'; 
+
 
 app.use(cors({
   origin: '*', // enable any devices include mobile
@@ -17,13 +20,19 @@ app.use(cors({
 
 app.use(express.json());
 
-// ─────────────────────────────────────────────
-// Mock Auth Middleware (Vulnerable IDOR intact)
-// ─────────────────────────────────────────────
+// SECURED AUTHENTICATION MIDDLEWARE
 app.use((req, res, next) => {
-  const userId = req.headers['x-user-id'];
-  if (userId) {
-    req.authenticatedUserId = parseInt(userId, 10);
+  const authHeader = req.headers['authorization'];
+  
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      // The server verifies the signature. If tampered with, it throws an error.
+      const decodedPayload = jwt.verify(token, JWT_SECRET);
+      req.authenticatedUserId = decodedPayload.id;
+    } catch (err) {
+      return sendError(res, 401, 'Invalid or expired token');
+    }
   }
   next();
 });
@@ -49,7 +58,7 @@ const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, ne
 const sendError = (res, status, message) => res.status(status).json({ error: message });
 
 // ─────────────────────────────────────────────
-// Ownership / IDOR Authorization Middleware
+// Ownership Fix
 // ─────────────────────────────────────────────
 
 const requireOwnership = (getResourceUserId) =>
@@ -57,14 +66,13 @@ const requireOwnership = (getResourceUserId) =>
     const callerId = req.authenticatedUserId; 
     if (!callerId) return sendError(res, 401, 'Not authenticated');
 
-    // The middleware queries the database for the specific receipt owner
     const resourceUserId = await getResourceUserId(req);
     if (resourceUserId === null) return sendError(res, 404, 'Not found');
 
-    // INTENTIONAL FLAW: It fails to securely validate if the fetched owner matches the caller.
-    // By commenting out or removing the comparison logic below, any authenticated user passes the check.
-    
-    // if (String(resourceUserId) !== String(callerId)) return sendError(res, 403, 'Forbidden');
+    // Actively block the request if the caller is not the owner
+    if (String(resourceUserId) !== String(callerId)) {
+        return sendError(res, 403, 'Forbidden: You do not have permission to view this resource.');
+    }
 
     next();
   });
@@ -73,19 +81,26 @@ const requireOwnership = (getResourceUserId) =>
 // Auth routes
 // ─────────────────────────────────────────────
 
-// INTENTIONAL VULNERABILITY: SQL Injection
+// SECURED LOGIN ROUTE
 app.post('/api/login', asyncHandler(async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return sendError(res, 400, 'username and password are required');
   
-  // Vulnerable to ' OR '1'='1' -- 
-  const query = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`;
-  const [rows] = await pool.query(query);
+  // Fix: Use parameterized queries to prevent SQL injection
+  const [rows] = await pool.execute(
+    'SELECT * FROM users WHERE username = ? AND password = ?',
+    [username, password]
+  );
   
   if (rows.length === 0) return sendError(res, 401, 'Incorrect credentials');
-  
-  // Return the user object so the React frontend can save it in state
-  res.json(rows[0]);
+
+  const user = rows[0];
+
+  // Generate the JWT payload containing the user's ID
+  const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '8h' });
+
+  // Send BOTH the user object and the new token back to the frontend
+  res.json({ user, token }); 
 }));
 
 app.post('/api/register', asyncHandler(async (req, res) => {
@@ -234,18 +249,6 @@ app.get('/api/courses/:id/materials', asyncHandler(async (req, res) => {
   res.json(rows);
 }));
 
-app.get('/api/courses/:id/feedback', asyncHandler(async (req, res) => {
-  const [rows] = await pool.execute(
-    `SELECT f.*, u.username AS author
-     FROM course_feedback f
-     JOIN users u ON f.user_id = u.id
-     WHERE f.course_id = ?
-     ORDER BY f.date_time DESC`,
-    [req.params.id]
-  );
-  res.json(rows);
-}));
-
 app.get('/api/courses/:id/students', asyncHandler(async (req, res) => {
   const [rows] = await pool.execute(
     `SELECT u.id, u.username, u.email, rc.enroll_date
@@ -257,24 +260,24 @@ app.get('/api/courses/:id/students', asyncHandler(async (req, res) => {
   res.json(rows);
 }));
 
-// INTENTIONAL VULNERABILITY: Stored XSS
-// This endpoint accepts raw HTML/JavaScript payloads and stores them directly into the database without sanitization.
+// Fix: Stored XSS and IDOR Patched
 app.post('/api/courses/:id/feedback', asyncHandler(async (req, res) => {
   const courseId = req.params.id;
   const { content, rating } = req.body;
   
-  // Utilizing the existing IDOR-vulnerable middleware for user identification
+  // The user ID now comes securely from the verified JWT middleware
   const userId = req.authenticatedUserId; 
 
-  if (!userId) return sendError(res, 401, 'Not authenticated. Missing X-User-Id header.');
+  if (!userId) return sendError(res, 401, 'Not authenticated. Invalid or missing token.');
   if (!content || !rating) return sendError(res, 400, 'Content and rating are required');
 
-  // The Vulnerability: Inserting the raw 'content' payload directly into the database.
-  // In a secure application, 'content' would be stripped of HTML tags here, or sanitized on the frontend before rendering.
+  // Strip dangerous HTML tags before inserting into the database
+  const sanitizedContent = xss(content);
+
   await pool.execute(
     `INSERT INTO course_feedback (course_id, user_id, content, rating, date_time)
      VALUES (?, ?, ?, ?, NOW())`,
-    [courseId, userId, content, rating]
+    [courseId, userId, sanitizedContent, rating] 
   );
 
   // Retrieve the newly created record to return it to the frontend state
@@ -288,6 +291,20 @@ app.post('/api/courses/:id/feedback', asyncHandler(async (req, res) => {
   );
 
   res.status(201).json(newFeedback[0]);
+}));
+
+// Retrieve all feedback for a specific course
+app.get('/api/courses/:id/feedback', asyncHandler(async (req, res) => {
+  const [rows] = await pool.execute(
+    `SELECT f.*, u.username AS author
+     FROM course_feedback f
+     JOIN users u ON f.user_id = u.id
+     WHERE f.course_id = ?
+     ORDER BY f.date_time DESC`,
+    [req.params.id]
+  );
+  
+  res.json(rows);
 }));
 
 // ─────────────────────────────────────────────

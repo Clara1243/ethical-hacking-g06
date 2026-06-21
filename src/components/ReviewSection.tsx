@@ -27,7 +27,6 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ reviews, onAddRevi
       </div>
 
       <div className="max-w-3xl">
-        {/* Professional Review Form (No XSS Hints) */}
         <form onSubmit={handleSubmit} className="space-y-4 mb-10 bg-slate-50 p-6 rounded-xl border border-gray-200">
           <h4 className="text-sm font-bold text-slate-800 mb-2">Write a Review</h4>
           <div>
@@ -116,11 +115,10 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ reviews, onAddRevi
                   </div>
                 </div>
 
-                {/* THE XSS VULNERABILITY: Renders raw HTML invisibly */}
-                <div
-                  className="text-sm text-gray-700 bg-white leading-relaxed break-words"
-                  dangerouslySetInnerHTML={{ __html: rev.content }}
-                />
+                {/* SECURED RENDERING */}
+                <div className="text-sm text-gray-700 bg-white leading-relaxed break-words">
+                  {rev.content}
+                </div>
               </div>
             ))}
           </div>

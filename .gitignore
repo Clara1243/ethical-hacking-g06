@@ -6,4 +6,8 @@ coverage/
 *.log
 .env*
 !.env.example
+<<<<<<< HEAD
 dev-dist/
+=======
+dev-dist/
+>>>>>>> 2ec44f2c46f6c227137b27c65aec734a96863fb3
