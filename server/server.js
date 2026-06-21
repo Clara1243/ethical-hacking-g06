@@ -4,11 +4,21 @@ const mysql = require('mysql2/promise');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'myeduconnect_fixed_branch_secret_key_2026';
 const BCRYPT_SALT_ROUNDS = 10;
+
+const loginRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many login attempts, please try again later.'
+});
+
+app.use(helmet());
 
 app.use(cors({
   origin: '*',
@@ -91,7 +101,7 @@ const requireOwnership = (getResourceUserId) =>
 // ─────────────────────────────────────────────
 // Auth routes
 // ─────────────────────────────────────────────
-app.post('/api/login', asyncHandler(async (req, res) => {
+app.post('/api/login', loginRateLimit, asyncHandler(async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
