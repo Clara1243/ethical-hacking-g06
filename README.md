@@ -243,3 +243,15 @@ The following network-layer weaknesses are intentionally present for controlled 
 - Cleartext HTTP: Frontend talks to backend over plain HTTP. No TLS is configured.
 - Unencrypted database connection: Backend connects to MySQL over plain TCP. No TLS is configured between the backend host and `db`.
 
+## Security Hardening Notes
+
+### Network Protection — MySQL Port Blocking
+
+As part of the hardened deployment, port 3306 must be blocked on the host machine firewall to prevent direct external database access. Run the following command on Windows as Administrator:
+
+```bash
+netsh advfirewall firewall add rule name="Block MySQL External Access" protocol=TCP dir=in localport=3306 remoteip=any action=block
+```
+
+This ensures MySQL is only accessible internally within the Docker network and cannot be reached directly from the external network.
+
