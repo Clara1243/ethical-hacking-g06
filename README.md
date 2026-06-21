@@ -106,7 +106,7 @@ Ensure your host machine has the following tools installed:
 
 This project features an integrated Progressive Web Application (PWA) framework allowing users to access and install the educational platform on physical mobile devices over the local area network (LAN).
 
-Following these steps to stage and verify the mobile environment:
+Follow these steps to stage and verify the mobile environment:
 
 ### Step 1: Pre-compile & Run Frontend Assets
 Ensure that the Docker containers and Node.js backend server are fully active as described in Phase 3 & 4. Then, compile the production assets and initialize the PWA staging environment:
@@ -143,13 +143,13 @@ chrome://flags
 ```
 3. In the flag search index, lookup: 
 ```bash
-#unsafely-treat-insecure-origin-as-secure
+unsafely-treat-insecure-origin-as-secure
 ```
 4. Switch the state configuration to **Enabled**.
-5. Input your desktop's full server address into the white-list textbook interface: http://192.168.100.xx:3000 (Replace with the IP found in Step 3).
+5. Input your desktop's full server address into the white-list textbox interface: http://192.168.100.xx:5173 (Replace with the IP found in Step 3).
 6. Tap the **Relaunch / Restart** button at the base of the screen to hard-reboot the Chrome application kernel.
 
-## For Micosoft Edge Users:
+## For Microsoft Edge Users:
 1. Launch the **Microsoft Edge** application on your smartphone.
 2. Access the secure overrides via:
 ```bash
@@ -157,12 +157,12 @@ edge://flags
 ```
 3. Locate 
 ```bash
-#unsafely-treat-insecure-origin-as-secure
+unsafely-treat-insecure-origin-as-secure
 ```
-and flip to Enabled, append your exact host LAN address context (http://192.168.100.xx:3000), and relaunch the software browser.
+and switch to Enabled, append your exact host LAN address context (http://192.168.100.xx:5173), and relaunch the software browser.
 
 ### Step 5: Native application installation (PWA)
-1. Navigate directly to your local infrastructure link on your phone browser: http://192.168.100.xx:3000.
+1. Navigate directly to your local infrastructure link on your phone browser: http://192.168.100.xx:5173.
 2. Tap the browser options icon (the Triple Dots Menu at the top or bottom panel bounds).
 3. Select the option "Add to Home Screen" or "Install App".
 4. The system will cleanly drop a native desktop application icon onto your smartphone's layout, allowing full sandbox interaction detached from traditional address bars.

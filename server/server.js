@@ -44,7 +44,7 @@ app.use((req, res, next) => {
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  password: 'rootpassword',
+  password: 'dtBs_P@ssw0rd_127v6_Secure!', // Updated with strong credentials
   database: 'MyEduConnect_db',
   waitForConnections: true,
   connectionLimit: 10,

@@ -5,11 +5,12 @@ services:
     image: mysql:8.0
     container_name: MyEduConnect_db
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      # Fix weak credentials by enforcing a strong complex password 
+      MYSQL_ROOT_PASSWORD: dtBs_P@ssw0rd_127v6_Secure!
       MYSQL_DATABASE: MyEduConnect_db
+    # 1. Fix exposure of DB Port using localhost whitelist
     ports:
-      # SERVER MISCONFIGURATION: EXPOSURE OF MYSQL DB PORT
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       # This points to the init.sql we drafted earlier to build your vulnerable tables
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -19,20 +20,8 @@ services:
     container_name: MyEduConnect_db_admin
     restart: always
     ports:
-      # SERVER MISCONFIGURATION: EXPOSED ADMIN SERVICE WITH WEAK CREDENTIALS (the rootpassword)
-      - "8080:8080"
+      # 2. Fixed exposed admin service using localhost whitelisting
+      - "127.0.0.1:8080:8080"
 
-  vulnerable_host:
-    image: rastasheep/ubuntu-sshd:18.04
-    container_name: MyEduConnect_vulnerable_host
-    ports:
-      - "2222:22"
-    # SERVER MISCONFIGURATION: weak SSH credentials
-    # OS MISCONFIGURATION: SUID Binary Misconfiguration (For Privilege Escalation)
-    entrypoint: >
-      sh -c "
-      useradd -m -s /bin/bash lowuser &&
-      echo 'lowuser:password123' | chpasswd &&
-      chmod u+s /usr/bin/find &&  
-      exec /usr/sbin/sshd -D
-      "
+  # 3. Delete vulnerable_host (port 2222), closed ssh service
+      

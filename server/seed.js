@@ -4,7 +4,7 @@ const { faker } = require('@faker-js/faker');
 const dbConfig = {
   host: 'localhost',
   user: 'root',
-  password: 'rootpassword', 
+  password: 'dtBs_P@ssw0rd_127v6_Secure!',  // Updated with strong credentials
   database: 'MyEduConnect_db'
 };
 
