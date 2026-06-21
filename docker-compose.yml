@@ -7,9 +7,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: MyEduConnect_db
-    ports:
-      # SERVER MISCONFIGURATION: EXPOSURE OF MYSQL DB PORT
-      - "3306:3306"
     volumes:
       # This points to the init.sql we drafted earlier to build your vulnerable tables
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
