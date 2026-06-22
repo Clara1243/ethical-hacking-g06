@@ -14,13 +14,12 @@ export const ReceiptView: React.FC<ReceiptViewProps> = ({ receiptId, currentUser
 
   useEffect(() => {
     setIsLoading(true);
-    const token = localStorage.getItem('token');
 
     fetch(`/api/receipts/${receiptId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'X-User-Id': currentUserId.toString()      
       }
     })
       .then(res => {

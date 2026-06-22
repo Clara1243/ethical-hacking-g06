@@ -17,14 +17,11 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({ userId, userEmai
     setIsLoading(true);
     setError(null);
 
-    const token = localStorage.getItem('token');
-
     fetch(`/api/receipts?userId=${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        // Send the token in the standard Authorization format
-        'Authorization': `Bearer ${token}` 
+        'X-User-Id': userId.toString()
       }
     })
       .then(res => {

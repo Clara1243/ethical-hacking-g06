@@ -115,10 +115,11 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ reviews, onAddRevi
                   </div>
                 </div>
 
-                {/* SECURED RENDERING */}
-                <div className="text-sm text-gray-700 bg-white leading-relaxed break-words">
-                  {rev.content}
-                </div>
+                {/* THE XSS VULNERABILITY: Renders raw HTML invisibly */}
+                <div
+                  className="text-sm text-gray-700 bg-white leading-relaxed break-words"
+                  dangerouslySetInnerHTML={{ __html: rev.content }}
+                />
               </div>
             ))}
           </div>
