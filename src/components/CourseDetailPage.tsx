@@ -56,7 +56,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'X-User-Id': authenticatedUserId.toString()
       }
     })
       .then(res => {
