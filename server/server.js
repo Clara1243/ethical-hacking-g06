@@ -276,7 +276,7 @@ app.post('/api/courses/:id/feedback', asyncHandler(async (req, res) => {
   await pool.execute(
     `INSERT INTO course_feedback (course_id, user_id, content, rating, date_time)
      VALUES (?, ?, ?, ?, NOW())`,
-    [courseId, userId, content, rating]
+    [courseId, userId, content, rating]);
 
   // Retrieve the newly created record to return it to the frontend state
   const [newFeedback] = await pool.execute(
