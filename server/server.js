@@ -7,8 +7,12 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'myeduconnect_fixed_branch_secret_key_2026';
+const xss = require('xss'); // For sanitizing user input to prevent XSS
+const jwt = require('jsonwebtoken');
+
 const BCRYPT_SALT_ROUNDS = 10;
+const JWT_SECRET = process.env.JWT_SECRET || 'myeduconnect_fixed_branch_secret_key_2026';
+
 
 app.use(cors({
   origin: '*',
@@ -31,6 +35,7 @@ app.use((req, res, next) => {
   const token = authHeader.slice(7);
 
   try {
+    // The server verifies the signature. If tampered with or expired, it throws an error.
     const decoded = jwt.verify(token, JWT_SECRET);
     req.authenticatedUserId = decoded.id;
     req.authenticatedUserRole = decoded.role;
@@ -65,7 +70,7 @@ const removePassword = (user) => {
 };
 
 // ─────────────────────────────────────────────
-// Ownership Authorization Middleware
+// Ownership / IDOR Authorization Middleware
 // ─────────────────────────────────────────────
 const requireOwnership = (getResourceUserId) =>
   asyncHandler(async (req, res, next) => {
@@ -77,12 +82,15 @@ const requireOwnership = (getResourceUserId) =>
 
     const resourceUserId = await getResourceUserId(req);
 
-    if (resourceUserId === null) {
-      return sendError(res, 404, 'Not found');
+    // Actively block the request if the caller is not the owner
+    // 1. First, check if the resource actually exists
+    if (resourceUserId === null || resourceUserId === undefined) {
+      return sendError(res, 404, 'Not found: The requested resource does not exist.');
     }
 
+    // 2. Then, actively block the request if the caller is not the owner
     if (String(resourceUserId) !== String(callerId)) {
-      return sendError(res, 403, 'Forbidden');
+      return sendError(res, 403, 'Forbidden: You do not have permission to view this resource.');
     }
 
     next();
@@ -321,23 +329,23 @@ app.get('/api/courses/:id/students', asyncHandler(async (req, res) => {
   res.json(rows);
 }));
 
+// INTENTIONAL VULNERABILITY: Stored XSS
+// This endpoint accepts raw HTML/JavaScript payloads and stores them directly into the database without sanitization.
 app.post('/api/courses/:id/feedback', asyncHandler(async (req, res) => {
   const courseId = req.params.id;
   const { content, rating } = req.body;
   const userId = req.authenticatedUserId;
 
-  if (!userId) {
-    return sendError(res, 401, 'Not authenticated');
-  }
+  if (!userId) return sendError(res, 401, 'Not authenticated. Invalid or missing token.');
+  if (!content || !rating) return sendError(res, 400, 'Content and rating are required');
 
-  if (!content || !rating) {
-    return sendError(res, 400, 'Content and rating are required');
-  }
+  // Strip dangerous HTML tags before inserting into the database
+  const sanitizedContent = xss(content);
 
   await pool.execute(
     `INSERT INTO course_feedback (course_id, user_id, content, rating, date_time)
      VALUES (?, ?, ?, ?, NOW())`,
-    [courseId, userId, content, rating]
+    [courseId, userId, sanitizedContent, rating] 
   );
 
   const [newFeedback] = await pool.execute(
@@ -350,6 +358,20 @@ app.post('/api/courses/:id/feedback', asyncHandler(async (req, res) => {
   );
 
   res.status(201).json(newFeedback[0]);
+}));
+
+// Retrieve all feedback for a specific course
+app.get('/api/courses/:id/feedback', asyncHandler(async (req, res) => {
+  const [rows] = await pool.execute(
+    `SELECT f.*, u.username AS author
+     FROM course_feedback f
+     JOIN users u ON f.user_id = u.id
+     WHERE f.course_id = ?
+     ORDER BY f.date_time DESC`,
+    [req.params.id]
+  );
+  
+  res.json(rows);
 }));
 
 // ─────────────────────────────────────────────

@@ -21,11 +21,14 @@ export const EnrolledCourses: React.FC<EnrolledCoursesProps> = ({ studentId, onV
     setIsLoading(true);
     setError(null);
 
+    const token = localStorage.getItem('token');
+
     fetch(`/api/users/${studentId}/courses`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'X-User-Id': studentId.toString()
+        // Send the secure JWT
+        'Authorization': `Bearer ${token}` 
       }
     })
       .then(res => {
