@@ -8,7 +8,6 @@ const jwt = require('jsonwebtoken');
 const app = express();
 
 const xss = require('xss'); // For sanitizing user input to prevent XSS
-const jwt = require('jsonwebtoken');
 
 const BCRYPT_SALT_ROUNDS = 10;
 const JWT_SECRET = process.env.JWT_SECRET || 'myeduconnect_fixed_branch_secret_key_2026';
