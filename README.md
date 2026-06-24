@@ -225,7 +225,9 @@ Expected output shows `MyEduConnect_db` running with port `3306` mapped, and `My
 Access points:
 
 - Database Adminer UI: `http://localhost:8080`
-- Database: `localhost:3306` (MySQL root / `rootpassword`)
+- Username: root
+- Passowrd: rootpassword
+- database: MyEduConnect_db
 
 ### Redeploy / Reset
 
