@@ -3,7 +3,7 @@ const { faker } = require('@faker-js/faker');
 const bcrypt = require('bcryptjs');
 
 const dbConfig = {
-  host: 'localhost',
+  host: process.env.DB_HOST || 'localhost',
   user: 'root',
   password: 'rootpassword',
   database: 'MyEduConnect_db'

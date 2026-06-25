@@ -48,7 +48,7 @@ app.use((req, res, next) => {
 // Database — connection pool
 // ─────────────────────────────────────────────
 const pool = mysql.createPool({
-  host: 'localhost',
+  host: process.env.DB_HOST || 'localhost',
   user: 'root',
   password: 'rootpassword',
   database: 'MyEduConnect_db',

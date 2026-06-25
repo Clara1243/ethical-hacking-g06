@@ -14,6 +14,24 @@ services:
       # This points to the init.sql we drafted earlier to build your vulnerable tables
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
   
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: MyEduConnect_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - JWT_SECRET=myeduconnect_fixed_branch_secret_key_2026
+      - DB_HOST=db
+    depends_on:
+      - db
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    command: npm start
+
   adminer:  # <--- This must be aligned with 'db:'
     image: adminer
     container_name: MyEduConnect_db_admin

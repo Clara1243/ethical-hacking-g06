@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
+import { apiCall, API_ENDPOINTS } from '../api';
 
 interface LoginProps {
   onLoginSuccess: (user: UserProfile) => void;
@@ -20,23 +21,17 @@ export function Login({ onLoginSuccess }: LoginProps) {
     setError('');
     setIsLoading(true);
 
-    const endpoint = isLoginMode ? '/api/login' : '/api/register';
+    const endpoint = isLoginMode ? API_ENDPOINTS.login : API_ENDPOINTS.register;
     const payload = isLoginMode 
       ? { username, password } 
       : { username, email, password, role, dob }; 
 
     try {
-      const response = await fetch(`${endpoint}`, {
+      const responseData = await apiCall(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
-      if (!response.ok) {
-        throw new Error(isLoginMode ? 'Invalid username or password.' : 'Registration failed. Username or Email may already be taken.');
-      }
-
-      const responseData = await response.json();
       
       if (responseData.token) {
         localStorage.setItem('token', responseData.token);

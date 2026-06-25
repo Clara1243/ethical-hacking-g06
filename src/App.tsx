@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Login } from './components/Login';
 import { UserProfile, Course, Receipt, Role, Review } from './types';
 import { INITIAL_COURSES, USERS } from './data';
+import { apiCall, API_ENDPOINTS } from './api';
 import { CourseCatalog } from './components/CourseCatalog';
 import { CourseDetailPage } from './components/CourseDetailPage';
 import { EducatorDashboard } from './components/EducatorDashboard';
@@ -138,13 +139,11 @@ export default function App() {
   // ── Data fetching ──────────────────────────
   // Courses + users — fetched once on mount
   useEffect(() => {
-    fetch('/api/courses')
-      .then(res => res.json())
+    apiCall(API_ENDPOINTS.courseCatalog)
       .then((data: Course[]) => setCourses(data))
       .catch(err => console.error('Failed to fetch courses:', err));
 
-    fetch('/api/users')
-      .then(res => res.json())
+    apiCall(API_ENDPOINTS.users)
       .then((data: UserProfile[]) => {
         const userMap = data.reduce<Record<string, UserProfile>>((acc, u) => {
           acc[u.username.toLowerCase()] = u;

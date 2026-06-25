@@ -2,10 +2,11 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY server/package*.json ./
+COPY package*.json ./
 RUN npm ci
 
-COPY server/server.js ./
+COPY server.js ./
+COPY seed.js ./
 
 EXPOSE 3000
 
